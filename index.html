@@ -1,961 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Vipul Sharma – M.Tech CS student at IIIT Una. Web developer, ML engineer, cybersecurity enthusiast from Himachal Pradesh."/>
-  <title>Vipul Sharma | Portfolio</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Vipul Sharma | Enter the Web</title>
+  <meta name="description" content="Vipul Sharma – M.Tech CS student at IIIT Una. Web developer, ML engineer, cybersecurity enthusiast from Himachal Pradesh. An immersive portfolio you can't easily leave."/>
+  <meta name="theme-color" content="#030006"/>
+  <meta property="og:title" content="Vipul Sharma | Enter the Web"/>
+  <meta property="og:description" content="Web developer · ML engineer · Cybersecurity. Open at your own risk."/>
+  <meta property="og:image" content="https://vipulcodex.github.io/protfolio/profile.jpg"/>
+  <meta property="og:type" content="website"/>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🕷️%3C/text%3E%3C/svg%3E"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --red:    #dc143c;
-      --red2:   #ff2d55;
-      --red-dim: rgba(220,20,60,0.15);
-      --cyan:   #00d4ff;
-      --cyan-dim: rgba(0,212,255,0.1);
-      --bg:     #050508;
-      --bg2:    #0c0c14;
-      --border: rgba(220,20,60,0.3);
-      --text:   #e0e0e0;
-      --muted:  #888;
+  <link rel="stylesheet" href="css/style.css"/>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
     }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Rajdhani', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    /* ─── SPIDER-WEB CANVAS ─── */
-    #web-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* ─── SCROLLBAR ─── */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--red); border-radius: 3px; }
-
-    /* ─── NAV ─── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 3rem;
-      background: rgba(5,5,8,0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-logo {
-      font-family: 'Orbitron', monospace;
-      font-size: 1.3rem;
-      font-weight: 900;
-      color: var(--red);
-      letter-spacing: 2px;
-      text-decoration: none;
-    }
-    .nav-logo span { color: var(--cyan); }
-    .nav-links { display: flex; gap: 2rem; list-style: none; }
-    .nav-links a {
-      font-family: 'Rajdhani', sans-serif;
-      font-weight: 600;
-      font-size: 0.9rem;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text);
-      text-decoration: none;
-      transition: color .3s;
-      position: relative;
-    }
-    .nav-links a::after {
-      content: '';
-      position: absolute;
-      bottom: -4px; left: 0; width: 0; height: 1px;
-      background: var(--red);
-      transition: width .3s;
-    }
-    .nav-links a:hover { color: var(--red); }
-    .nav-links a:hover::after { width: 100%; }
-
-    /* ─── SECTIONS ─── */
-    section { position: relative; z-index: 1; padding: 6rem 2rem; }
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    .section-title {
-      font-family: 'Orbitron', monospace;
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--red);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 3rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .section-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, var(--border), transparent);
-    }
-    .section-title i { color: var(--cyan); font-size: 1.2rem; }
-
-    /* ─── HERO ─── */
-    #hero {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      padding-top: 6rem;
-    }
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 4rem;
-      align-items: center;
-    }
-    .hero-tag {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.85rem;
-      color: var(--cyan);
-      letter-spacing: 2px;
-      margin-bottom: 0.8rem;
-    }
-    .hero-name {
-      font-family: 'Orbitron', monospace;
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      font-weight: 900;
-      line-height: 1.1;
-      background: linear-gradient(135deg, #fff 30%, var(--red) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.5rem;
-    }
-    .hero-title {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: var(--red2);
-      letter-spacing: 2px;
-      margin-bottom: 1.5rem;
-    }
-    .hero-bio {
-      font-size: 1.05rem;
-      line-height: 1.8;
-      color: #b0b0b0;
-      max-width: 540px;
-      margin-bottom: 2rem;
-    }
-    .hero-socials { display: flex; gap: 1rem; flex-wrap: wrap; }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.65rem 1.4rem;
-      border-radius: 4px;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-decoration: none;
-      transition: all .3s;
-      cursor: pointer;
-    }
-    .btn-red {
-      background: var(--red);
-      color: #fff;
-      border: 1px solid var(--red);
-    }
-    .btn-red:hover { background: var(--red2); box-shadow: 0 0 20px rgba(220,20,60,0.5); transform: translateY(-2px); }
-    .btn-ghost {
-      background: transparent;
-      color: var(--cyan);
-      border: 1px solid var(--cyan);
-    }
-    .btn-ghost:hover { background: var(--cyan-dim); box-shadow: 0 0 20px rgba(0,212,255,0.3); transform: translateY(-2px); }
-
-    /* Profile photo */
-    .profile-wrap {
-      position: relative;
-      width: 260px;
-      height: 260px;
-      flex-shrink: 0;
-    }
-    .profile-ring {
-      position: absolute;
-      inset: -12px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      background: conic-gradient(var(--red), var(--cyan), var(--red)) border-box;
-      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: destination-out;
-      mask-composite: exclude;
-      animation: spin 6s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .profile-photo {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-      object-position: top;
-      border: 3px solid var(--bg2);
-      filter: contrast(1.05) brightness(0.95);
-    }
-    .profile-glow {
-      position: absolute;
-      inset: -20px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(220,20,60,0.2) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    /* Web lines on profile */
-    .web-svg {
-      position: absolute;
-      inset: -40px;
-      width: calc(100% + 80px);
-      height: calc(100% + 80px);
-      pointer-events: none;
-      opacity: 0.6;
-    }
-
-    /* ─── STATS BAR ─── */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4,1fr);
-      gap: 1.5rem;
-      margin-bottom: 4rem;
-    }
-    .stat-card {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      transition: all .3s;
-    }
-    .stat-card:hover { border-color: var(--red); background: var(--red-dim); transform: translateY(-4px); }
-    .stat-num {
-      font-family: 'Orbitron', monospace;
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--red);
-    }
-    .stat-label { font-size: 0.85rem; color: var(--muted); letter-spacing: 1px; margin-top: 0.3rem; }
-
-    /* ─── EDUCATION ─── */
-    .edu-table-wrap { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-    }
-    thead th {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 1.5px;
-      color: var(--cyan);
-      border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1rem;
-      text-align: left;
-    }
-    tbody tr {
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      transition: background .2s;
-    }
-    tbody tr:hover { background: var(--red-dim); }
-    tbody td { padding: 0.9rem 1rem; }
-    tbody td:last-child { color: var(--muted); font-size: 0.9rem; }
-
-    /* ─── EXPERIENCE ─── */
-    .exp-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 2rem;
-      background: rgba(12,12,20,0.6);
-      backdrop-filter: blur(6px);
-      position: relative;
-      overflow: hidden;
-    }
-    .exp-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 4px; height: 100%;
-      background: linear-gradient(to bottom, var(--red), transparent);
-    }
-    .exp-title { font-family: 'Rajdhani', sans-serif; font-size: 1.3rem; font-weight: 700; color: #fff; }
-    .exp-subtitle { color: var(--cyan); font-size: 0.9rem; margin: 0.3rem 0 1rem; }
-    .exp-date { color: var(--muted); font-size: 0.85rem; font-family: 'Share Tech Mono', monospace; }
-    .exp-items { list-style: none; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
-    .exp-items li {
-      display: flex; align-items: flex-start; gap: 0.7rem;
-      font-size: 0.95rem; color: #b0b0b0;
-    }
-    .exp-items li::before { content: '◈'; color: var(--red); flex-shrink: 0; margin-top: 2px; }
-
-    /* ─── PROJECTS ─── */
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-    }
-    .project-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.8rem;
-      background: rgba(12,12,20,0.7);
-      backdrop-filter: blur(6px);
-      position: relative;
-      overflow: hidden;
-      transition: all .3s;
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-    }
-    .project-card::after {
-      content: '';
-      position: absolute;
-      bottom: 0; right: 0;
-      width: 80px; height: 80px;
-      background: radial-gradient(circle at bottom right, rgba(220,20,60,0.2), transparent);
-      pointer-events: none;
-    }
-    .project-card:hover {
-      border-color: var(--red2);
-      transform: translateY(-5px);
-      box-shadow: 0 10px 40px rgba(220,20,60,0.2);
-    }
-    .project-tag {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.72rem;
-      color: var(--cyan);
-      letter-spacing: 1px;
-    }
-    .project-name {
-      font-family: 'Orbitron', monospace;
-      font-size: 1rem;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.3;
-    }
-    .project-desc { font-size: 0.9rem; color: #909090; line-height: 1.6; }
-    .project-date {
-      font-size: 0.8rem;
-      color: var(--muted);
-      font-family: 'Share Tech Mono', monospace;
-      margin-top: auto;
-      padding-top: 0.5rem;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .project-links { display: flex; gap: 0.5rem; }
-    .project-links a {
-      font-size: 0.8rem;
-      color: var(--red);
-      text-decoration: none;
-      border: 1px solid var(--border);
-      padding: 0.2rem 0.6rem;
-      border-radius: 3px;
-      transition: all .2s;
-    }
-    .project-links a:hover { background: var(--red); color: #fff; }
-
-    /* ─── SKILLS ─── */
-    .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1.5rem;
-    }
-    .skill-group {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-      background: rgba(12,12,20,0.6);
-    }
-    .skill-group-title {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.75rem;
-      color: var(--red);
-      letter-spacing: 2px;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .skill-group-title i { color: var(--cyan); }
-    .skill-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .skill-tag {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(220,20,60,0.25);
-      border-radius: 3px;
-      padding: 0.3rem 0.7rem;
-      font-size: 0.85rem;
-      color: var(--text);
-      transition: all .2s;
-    }
-    .skill-tag:hover { background: var(--red-dim); border-color: var(--red); color: #fff; }
-
-    /* ─── CERTS ─── */
-    .certs-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-    .cert-card {
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem 1.3rem;
-      background: rgba(12,12,20,0.5);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      transition: all .2s;
-    }
-    .cert-card:hover { border-color: var(--cyan); background: var(--cyan-dim); transform: translateX(4px); }
-    .cert-icon { font-size: 1.4rem; color: var(--cyan); flex-shrink: 0; }
-    .cert-name { font-size: 0.95rem; font-weight: 600; color: #fff; }
-    .cert-org { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
-
-    /* ─── PUBLICATION ─── */
-    .pub-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 2rem;
-      background: rgba(12,12,20,0.6);
-      display: flex;
-      gap: 1.5rem;
-      align-items: flex-start;
-    }
-    .pub-icon { font-size: 2.5rem; color: var(--red); flex-shrink: 0; }
-    .pub-title { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    .pub-journal { font-size: 0.9rem; color: var(--cyan); margin-bottom: 0.5rem; }
-    .pub-date { font-size: 0.85rem; color: var(--muted); font-family: 'Share Tech Mono', monospace; }
-
-    /* ─── ACHIEVEMENTS ─── */
-    .achieve-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1rem;
-    }
-    .achieve-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-      background: rgba(12,12,20,0.5);
-      text-align: center;
-      transition: all .3s;
-    }
-    .achieve-card:hover { border-color: var(--red); background: var(--red-dim); transform: translateY(-4px); }
-    .achieve-icon { font-size: 2rem; color: var(--red); margin-bottom: 0.8rem; }
-    .achieve-title { font-size: 1rem; font-weight: 700; color: #fff; }
-    .achieve-sub { font-size: 0.85rem; color: var(--muted); margin-top: 0.3rem; }
-
-    /* ─── FOOTER ─── */
-    footer {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 2rem;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-    footer span { color: var(--red); }
-
-    /* ─── FADE-IN ANIMATION ─── */
-    .fade-in {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.7s ease, transform 0.7s ease;
-    }
-    .fade-in.visible { opacity: 1; transform: translateY(0); }
-
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 768px) {
-      nav { padding: 1rem 1.5rem; }
-      .nav-links { display: none; }
-      .hero-grid { grid-template-columns: 1fr; text-align: center; }
-      .profile-wrap { margin: 0 auto; }
-      .hero-bio { margin: 0 auto 2rem; }
-      .hero-socials { justify-content: center; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      section { padding: 4rem 1.2rem; }
-    }
-  </style>
+  }
+  </script>
+  <noscript><style>.reveal{opacity:1!important}#gate{display:none!important}body.locked{overflow:auto!important}</style></noscript>
 </head>
-<body>
+<body class="locked" data-fx="1">
 
-<!-- Spider-web canvas -->
-<canvas id="web-canvas"></canvas>
+<!-- ═════════ FIXED LAYERS ═════════ -->
+<div id="gl" aria-hidden="true"></div>
+<div id="vignette" aria-hidden="true"></div>
+<div id="whisper" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+<div id="exit-warning" aria-hidden="true">WHERE ARE YOU GOING?<small>कहाँ जा रहे हो…</small></div>
+<div id="cur" aria-hidden="true"></div>
+<div id="cur-ring" aria-hidden="true"></div>
+<div id="ghost" aria-hidden="true"></div>
+<div id="dim" aria-hidden="true"></div>
+<div id="bright" aria-hidden="true"></div>
 
-<!-- NAV -->
-<nav>
+<!-- ═════════ GATE ═════════ -->
+<div id="gate" role="dialog" aria-label="Enter the portfolio">
+  <div class="gate-inner">
+    <p class="gate-kicker">// SIGNAL DETECTED · UPLINK STABLE</p>
+    <h1 class="gate-title glitch" data-text="VIPUL SHARMA">VIPUL SHARMA</h1>
+    <p class="gate-sub">A portfolio that <em>watches back</em>.</p>
+
+    <div class="gate-warn">
+      <i class="fas fa-triangle-exclamation"></i>
+      <span>Contains flashing lights, glitch effects &amp; sudden sounds. Pick <b>CALM</b> if you are sensitive.
+      Best experienced in <b>fullscreen</b>, with <b>headphones</b>, lights off.</span>
+    </div>
+
+    <div class="gate-calib">
+      <svg class="calib-spider" viewBox="0 0 120 120" aria-hidden="true">
+        <g fill="none" stroke="#dc143c" stroke-width="2" stroke-linecap="round">
+          <path d="M60 52 Q30 20 8 30 M60 52 Q26 42 6 58 M60 66 Q28 66 8 88 M60 68 Q38 94 24 112"/>
+          <path d="M60 52 Q90 20 112 30 M60 52 Q94 42 114 58 M60 66 Q92 66 112 88 M60 68 Q82 94 96 112"/>
+        </g>
+        <ellipse cx="60" cy="72" rx="15" ry="20" fill="#14030a" stroke="#dc143c"/>
+        <circle cx="60" cy="48" r="10" fill="#14030a" stroke="#dc143c"/>
+        <circle cx="56" cy="46" r="2" fill="#ff2d55"/><circle cx="64" cy="46" r="2" fill="#ff2d55"/>
+      </svg>
+      <div class="calib-body">
+        <label for="gate-bright">BRIGHTNESS CALIBRATION</label>
+        <p>Slide until the spider is <u>barely</u> visible.</p>
+        <input id="gate-bright" type="range" min="30" max="150" value="100"/>
+      </div>
+    </div>
+
+    <div class="gate-fx" role="group" aria-label="Intensity">
+      <button class="fx-btn" data-fx-btn="0" type="button">CALM</button>
+      <button class="fx-btn on" data-fx-btn="1" type="button">POSSESSED</button>
+      <button class="fx-btn" data-fx-btn="2" type="button">INSANE</button>
+    </div>
+
+    <div class="gate-opts">
+      <label><input type="checkbox" id="opt-sound" checked/> <i class="fas fa-volume-high"></i> Sound</label>
+      <label><input type="checkbox" id="opt-fs" checked/> <i class="fas fa-expand"></i> Fullscreen</label>
+    </div>
+
+    <button id="enter" class="enter-btn" type="button"><span>ENTER THE WEB</span></button>
+    <p class="gate-foot">Once you're in, I can't promise you'll want to leave. 🕷️</p>
+  </div>
+</div>
+
+<!-- ═════════ NAV ═════════ -->
+<nav id="nav">
   <a href="#hero" class="nav-logo">V<span>S</span></a>
   <ul class="nav-links">
-    <li><a href="#about">About</a></li>
-    <li><a href="#education">Education</a></li>
-    <li><a href="#projects">Projects</a></li>
-    <li><a href="#skills">Skills</a></li>
-    <li><a href="#certifications">Certs</a></li>
-    <li><a href="#achievements">Achievements</a></li>
+    <li><a href="#about">Vitals</a></li>
+    <li><a href="#education">Memory</a></li>
+    <li><a href="#projects">Creations</a></li>
+    <li><a href="#skills">Weapons</a></li>
+    <li><a href="#certifications">Relics</a></li>
+    <li><a href="#achievements">Trophies</a></li>
+    <li><a href="#contact">Surrender</a></li>
   </ul>
 </nav>
 
-<!-- HERO -->
-<section id="hero">
-  <div class="container">
-    <div class="hero-grid">
-      <div>
-        <p class="hero-tag">// M.TECH CSE · IIIT UNA · INDIA</p>
-        <h1 class="hero-name">VIPUL<br>SHARMA</h1>
-        <p class="hero-title">Web Developer · ML Engineer · Cybersecurity</p>
-        <p class="hero-bio">
+<!-- ═════════ CONTENT ═════════ -->
+<main id="content">
+
+  <!-- 01 HERO -->
+  <section id="hero" data-name="AWAKENING">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="hero-tag reveal" style="--d:.1s">// M.TECH CSE · IIIT UNA · INDIA</p>
+        <h2 class="hero-name glitch reveal" data-text="VIPUL SHARMA" style="--d:.25s">VIPUL SHARMA</h2>
+        <p class="hero-title reveal" style="--d:.45s"><span id="role">Web Developer</span><span class="caret">▍</span></p>
+        <p class="hero-bio reveal" style="--d:.6s">
           Passionate technologist from the mountains of Himachal Pradesh. Currently pursuing M.Tech in Computer Science at IIIT Una, building systems that fuse web technology, machine learning, and security fundamentals into real-world impact.
         </p>
-        <div class="hero-socials">
-          <a href="https://github.com/VIPULCODEX" target="_blank" class="btn btn-red" id="btn-github">
-            <i class="fab fa-github"></i> GitHub
-          </a>
-          <a href="https://linkedin.com/in/vipul-s-302734228" target="_blank" class="btn btn-ghost" id="btn-linkedin">
-            <i class="fab fa-linkedin"></i> LinkedIn
-          </a>
-          <a href="mailto:vipul26122004@gmail.com" class="btn btn-ghost" id="btn-email">
-            <i class="fas fa-envelope"></i> Email
-          </a>
+        <div class="hero-socials reveal" style="--d:.75s">
+          <a href="https://github.com/VIPULCODEX" target="_blank" rel="noopener" class="btn btn-red" id="btn-github"><i class="fab fa-github"></i> GitHub</a>
+          <a href="https://linkedin.com/in/vipul-s-302734228" target="_blank" rel="noopener" class="btn btn-ghost" id="btn-linkedin"><i class="fab fa-linkedin"></i> LinkedIn</a>
+          <a href="mailto:vipul26122004@gmail.com" class="btn btn-ghost" id="btn-email"><i class="fas fa-envelope"></i> Email</a>
         </div>
+        <pre id="hero-log" class="hero-log reveal" style="--d:.9s" aria-hidden="true"></pre>
       </div>
 
-      <!-- Profile Photo -->
-      <div class="profile-wrap">
+      <div class="portrait reveal" style="--d:.5s">
         <div class="profile-glow"></div>
         <div class="profile-ring"></div>
-        <img src="profile.jpg" alt="Vipul Sharma" class="profile-photo"/>
-        <!-- Spider web lines around photo -->
-        <svg class="web-svg" viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g opacity="0.5">
-            <!-- Radial lines from center -->
-            <line x1="170" y1="170" x2="170" y2="10" stroke="#dc143c" stroke-width="0.8"/>
-            <line x1="170" y1="170" x2="294" y2="46" stroke="#dc143c" stroke-width="0.8"/>
-            <line x1="170" y1="170" x2="330" y2="170" stroke="#dc143c" stroke-width="0.8"/>
-            <line x1="170" y1="170" x2="294" y2="294" stroke="#dc143c" stroke-width="0.8"/>
-            <line x1="170" y1="170" x2="170" y2="330" stroke="#dc143c" stroke-width="0.8"/>
-            <line x1="170" y1="170" x2="46" y2="294" stroke="#dc143c" stroke-width="0.8"/>
-            <line x1="170" y1="170" x2="10" y2="170" stroke="#dc143c" stroke-width="0.8"/>
-            <line x1="170" y1="170" x2="46" y2="46" stroke="#dc143c" stroke-width="0.8"/>
-            <!-- Concentric rings -->
-            <circle cx="170" cy="170" r="40" stroke="#dc143c" stroke-width="0.8" opacity="0.6"/>
-            <circle cx="170" cy="170" r="80" stroke="#dc143c" stroke-width="0.6" opacity="0.4"/>
-            <circle cx="170" cy="170" r="120" stroke="#dc143c" stroke-width="0.5" opacity="0.3"/>
-            <circle cx="170" cy="170" r="155" stroke="#dc143c" stroke-width="0.4" opacity="0.2"/>
+        <div class="portrait-img">
+          <img src="profile.jpg" alt="Vipul Sharma" class="p-base"/>
+          <img src="profile.jpg" alt="" aria-hidden="true" class="p-r"/>
+          <img src="profile.jpg" alt="" aria-hidden="true" class="p-c"/>
+        </div>
+        <svg class="web-svg" viewBox="0 0 340 340" fill="none" aria-hidden="true">
+          <g opacity="0.55" stroke="#dc143c" stroke-width="0.8">
+            <line x1="170" y1="170" x2="170" y2="10"/><line x1="170" y1="170" x2="294" y2="46"/>
+            <line x1="170" y1="170" x2="330" y2="170"/><line x1="170" y1="170" x2="294" y2="294"/>
+            <line x1="170" y1="170" x2="170" y2="330"/><line x1="170" y1="170" x2="46" y2="294"/>
+            <line x1="170" y1="170" x2="10" y2="170"/><line x1="170" y1="170" x2="46" y2="46"/>
+            <circle cx="170" cy="170" r="40" opacity=".6"/><circle cx="170" cy="170" r="80" opacity=".4"/>
+            <circle cx="170" cy="170" r="120" opacity=".3"/><circle cx="170" cy="170" r="155" opacity=".2"/>
           </g>
         </svg>
       </div>
     </div>
-  </div>
-</section>
+    <div class="scroll-cue" aria-hidden="true"><span>SCROLL TO DESCEND</span><i class="fas fa-chevron-down"></i></div>
+  </section>
 
-<!-- ABOUT / STATS -->
-<section id="about">
-  <div class="container">
-    <h2 class="section-title"><i class="fas fa-spider"></i>Network Stats</h2>
-    <div class="stats fade-in">
-      <div class="stat-card">
-        <div class="stat-num">9+</div>
-        <div class="stat-label">Projects Built</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">8+</div>
-        <div class="stat-label">Certifications</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">1</div>
-        <div class="stat-label">Research Paper</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">8.16</div>
-        <div class="stat-label">B.Tech CGPA</div>
+  <!-- 02 ABOUT / STATS -->
+  <section id="about" data-name="VITALS">
+    <div class="container">
+      <h2 class="section-title reveal"><i class="fas fa-spider"></i><span class="scr">Network Stats</span></h2>
+      <div class="stats">
+        <div class="stat-card panel tilt reveal" style="--d:.05s"><div class="stat-num" data-count="9" data-suffix="+">0</div><div class="stat-label">Projects Built</div></div>
+        <div class="stat-card panel tilt reveal" style="--d:.15s"><div class="stat-num" data-count="8" data-suffix="+">0</div><div class="stat-label">Certifications</div></div>
+        <div class="stat-card panel tilt reveal" style="--d:.25s"><div class="stat-num" data-count="1">0</div><div class="stat-label">Research Paper</div></div>
+        <div class="stat-card panel tilt reveal" style="--d:.35s"><div class="stat-num" data-count="8.16" data-dec="2">0</div><div class="stat-label">B.Tech CGPA</div></div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- EDUCATION -->
-<section id="education">
-  <div class="container">
-    <h2 class="section-title"><i class="fas fa-graduation-cap"></i>Education</h2>
-    <div class="edu-table-wrap fade-in">
-      <table>
-        <thead>
-          <tr>
-            <th>Degree / Certificate</th>
-            <th>Institute / Board</th>
-            <th>Score</th>
-            <th>Year</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>M.Tech, CSE</strong></td>
-            <td>Indian Institute of Information Technology, Una</td>
-            <td><span style="color:var(--cyan)">Ongoing</span></td>
-            <td>2025 – 2027</td>
-          </tr>
-          <tr>
-            <td><strong>B.Tech, CSE</strong></td>
-            <td>Himachal Pradesh Technical University (HPTU)</td>
-            <td><span style="color:var(--red)">8.16 CGPA</span></td>
-            <td>2021 – 2025</td>
-          </tr>
-          <tr>
-            <td><strong>Senior Secondary (XII)</strong></td>
-            <td>DAV Public Senior Secondary School, Greyoh</td>
-            <td>94.8%</td>
-            <td>2021</td>
-          </tr>
-          <tr>
-            <td><strong>Secondary (X)</strong></td>
-            <td>Govt. High School, Samirpur</td>
-            <td>92.4%</td>
-            <td>2019</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- 03 EDUCATION -->
+  <section id="education" data-name="MEMORY">
+    <div class="container">
+      <h2 class="section-title reveal"><i class="fas fa-graduation-cap"></i><span class="scr">Education</span></h2>
+      <div class="panel edu-wrap reveal">
+        <table>
+          <thead><tr><th>Degree / Certificate</th><th>Institute / Board</th><th>Score</th><th>Year</th></tr></thead>
+          <tbody>
+            <tr><td><strong>M.Tech, CSE</strong></td><td>Indian Institute of Information Technology, Una</td><td><span class="c-cyan">Ongoing</span></td><td>2025 – 2027</td></tr>
+            <tr><td><strong>B.Tech, CSE</strong></td><td>Himachal Pradesh Technical University (HPTU)</td><td><span class="c-red">8.16 CGPA</span></td><td>2021 – 2025</td></tr>
+            <tr><td><strong>Senior Secondary (XII)</strong></td><td>DAV Public Senior Secondary School, Greyoh</td><td>94.8%</td><td>2021</td></tr>
+            <tr><td><strong>Secondary (X)</strong></td><td>Govt. High School, Samirpur</td><td>92.4%</td><td>2019</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- EXPERIENCE -->
-<section id="experience">
-  <div class="container">
-    <h2 class="section-title"><i class="fas fa-briefcase"></i>Experience</h2>
-    <div class="exp-card fade-in">
-      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;align-items:flex-start">
+  <!-- 04 EXPERIENCE -->
+  <section id="experience" data-name="LABOR">
+    <div class="container">
+      <h2 class="section-title reveal"><i class="fas fa-briefcase"></i><span class="scr">Experience</span></h2>
+      <div class="panel exp-card reveal">
+        <div class="exp-head">
+          <div>
+            <div class="exp-title">Freelance Documentation &amp; Content Support</div>
+            <div class="exp-subtitle">Independent Freelancer · Remote</div>
+          </div>
+          <div class="exp-date">2023 – Present</div>
+        </div>
+        <ul class="exp-items">
+          <li>Prepared resumes, CVs, reports, and structured documents for clients.</li>
+          <li>Assisted with content writing, formatting, and presentation of technical documents.</li>
+          <li>Contributed to field data collection and documentation for Himachal government-related work.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 PROJECTS -->
+  <section id="projects" data-name="CREATIONS">
+    <div class="container">
+      <h2 class="section-title reveal"><i class="fas fa-code"></i><span class="scr">Projects</span></h2>
+      <div class="projects-grid">
+        <article class="project-card panel tilt reveal"><div class="project-tag">// PERSONAL PROJECT</div><h3 class="project-name">FRET CONNECT</h3><p class="project-desc">A concept-driven social media platform for musicians, singers, and songwriters to collaborate, share work, and receive meaningful feedback.</p><div class="project-date">Jul 2025 – Present</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// IIIT UNA PROJECT</div><h3 class="project-name">VIPVISUALIZE</h3><p class="project-desc">Graph visualizer representing compatibility relations between donor-recipient pairs for kidney exchange optimization using induced and acyclic matching algorithms.</p><div class="project-date">Feb 2026 – Mar 2026</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// PERSONAL PROJECT</div><h3 class="project-name">RESUME-AI</h3><p class="project-desc">AI-assisted resume builder with ATS scoring and LaTeX-based resume generation. Designed to run fully locally without external API dependency.</p><div class="project-date">Jan 2026 – Mar 2026</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// HPTU PROJECT</div><h3 class="project-name">NORTH STARS</h3><p class="project-desc">Travel guide web app for unexplored trekking routes and mountain temples in Dhauladhar. Features blogs, route guidance, local insights, and safe journey information.</p><div class="project-date">Jan 2025 – Jun 2025</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// HPTU PROJECT</div><h3 class="project-name">VEDAGYA</h3><p class="project-desc">Mobile application built with Kotlin and Jetpack libraries that aggregates technology news, trends, and blogs into a single unified platform.</p><div class="project-date">Jul 2024 – Oct 2024</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// ML PROJECT · HPTU</div><h3 class="project-name">ALZHEIMER PREDICTION SYSTEM</h3><p class="project-desc">Machine learning model using regression and decision tree techniques for early Alzheimer's prediction, processing medical data to identify risk patterns.</p><div class="project-date">Aug 2024 – Nov 2024</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// SIMULATION · HPTU</div><h3 class="project-name">TRAFFIC SIMULATION SYSTEM</h3><p class="project-desc">Simulates real-world traffic flow, vehicle movement, signals, and congestion in a controlled environment to demonstrate traffic behavior and management strategies.</p><div class="project-date">Feb 2024 – May 2024</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// WEB APP · HPTU</div><h3 class="project-name">PG LIFE</h3><p class="project-desc">Web application to help users find PGs and rooms in nearby localities with accommodation details, amenities listings, and accessibility information.</p><div class="project-date">Jul 2023 – Nov 2023</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// EARLY PROJECTS</div><h3 class="project-name">KBC GAME &amp; HANGMAN</h3><p class="project-desc">C++ quiz game inspired by Kaun Banega Crorepati and a Python-based Hangman game, developed during school-level programming practice.</p><div class="project-date">2020 – 2022</div></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 SKILLS -->
+  <section id="skills" data-name="WEAPONS">
+    <div class="container">
+      <h2 class="section-title reveal"><i class="fas fa-terminal"></i><span class="scr">Technical Skills</span></h2>
+      <p class="hint reveal">// drag the orb. it has a mind of its own.</p>
+      <div id="sphere" class="reveal" aria-hidden="true"></div>
+      <div class="skills-grid">
+        <div class="skill-group panel reveal"><div class="skill-group-title"><i class="fas fa-code"></i>Languages</div><div class="skill-tags"><span class="skill-tag">C</span><span class="skill-tag">C++</span><span class="skill-tag">Python</span><span class="skill-tag">JavaScript</span><span class="skill-tag">Kotlin</span></div></div>
+        <div class="skill-group panel reveal" style="--d:.1s"><div class="skill-group-title"><i class="fas fa-globe"></i>Web Development</div><div class="skill-tags"><span class="skill-tag">HTML</span><span class="skill-tag">CSS</span><span class="skill-tag">React.js</span><span class="skill-tag">Node.js</span><span class="skill-tag">MongoDB</span><span class="skill-tag">Flask</span></div></div>
+        <div class="skill-group panel reveal" style="--d:.2s"><div class="skill-group-title"><i class="fas fa-shield-halved"></i>Cybersecurity</div><div class="skill-tags"><span class="skill-tag">Security Fundamentals</span><span class="skill-tag">Threat Analysis</span><span class="skill-tag">Ethical Hacking</span></div></div>
+        <div class="skill-group panel reveal" style="--d:.3s"><div class="skill-group-title"><i class="fas fa-tools"></i>Tools &amp; Platforms</div><div class="skill-tags"><span class="skill-tag">Git</span><span class="skill-tag">GitHub</span><span class="skill-tag">VS Code</span><span class="skill-tag">PyArmor</span><span class="skill-tag">Jetpack</span><span class="skill-tag">Blender</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 CERTS -->
+  <section id="certifications" data-name="RELICS">
+    <div class="container">
+      <h2 class="section-title reveal"><i class="fas fa-certificate"></i><span class="scr">Certifications</span></h2>
+      <div class="certs-grid">
+        <div class="cert-card panel reveal"><div class="cert-icon"><i class="fas fa-layer-group"></i></div><div><div class="cert-name">MERN Stack Development</div><div class="cert-org">Excellence Technology · May 2025</div></div></div>
+        <div class="cert-card panel reveal" style="--d:.06s"><div class="cert-icon"><i class="fab fa-android"></i></div><div><div class="cert-name">Android Development</div><div class="cert-org">Internshala · Sep 2024</div></div></div>
+        <div class="cert-card panel reveal" style="--d:.12s"><div class="cert-icon"><i class="fas fa-mobile-screen"></i></div><div><div class="cert-name">Android App Development</div><div class="cert-org">NSDC · Sep 2024</div></div></div>
+        <div class="cert-card panel reveal" style="--d:.18s"><div class="cert-icon"><i class="fas fa-lock"></i></div><div><div class="cert-name">IBM Cyber Security</div><div class="cert-org">IBM · Jun 2024</div></div></div>
+        <div class="cert-card panel reveal" style="--d:.24s"><div class="cert-icon"><i class="fas fa-code"></i></div><div><div class="cert-name">Web Development</div><div class="cert-org">Internshala · Oct 2023</div></div></div>
+        <div class="cert-card panel reveal" style="--d:.3s"><div class="cert-icon"><i class="fas fa-cube"></i></div><div><div class="cert-name">Computer Graphics</div><div class="cert-org">NPTEL · Oct 2022</div></div></div>
+        <div class="cert-card panel reveal" style="--d:.36s"><div class="cert-icon"><i class="fas fa-robot"></i></div><div><div class="cert-name">Generative AI Workshop</div><div class="cert-org">LinkedIn · Jun 2024</div></div></div>
+        <div class="cert-card panel reveal" style="--d:.42s"><div class="cert-icon"><i class="fas fa-brain"></i></div><div><div class="cert-name">Ethics in Generative AI</div><div class="cert-org">LinkedIn · Jun 2024</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 PUBLICATION -->
+  <section id="publication" data-name="SCRIPTURE">
+    <div class="container">
+      <h2 class="section-title reveal"><i class="fas fa-book-open"></i><span class="scr">Publication</span></h2>
+      <div class="panel pub-card reveal">
+        <div class="pub-icon"><i class="fas fa-file-alt"></i></div>
         <div>
-          <div class="exp-title">Freelance Documentation &amp; Content Support</div>
-          <div class="exp-subtitle">Independent Freelancer · Remote</div>
-        </div>
-        <div class="exp-date">2023 – Present</div>
-      </div>
-      <ul class="exp-items">
-        <li>Prepared resumes, CVs, reports, and structured documents for clients.</li>
-        <li>Assisted with content writing, formatting, and presentation of technical documents.</li>
-        <li>Contributed to field data collection and documentation for Himachal government-related work.</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- PROJECTS -->
-<section id="projects">
-  <div class="container">
-    <h2 class="section-title"><i class="fas fa-code"></i>Projects</h2>
-    <div class="projects-grid">
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// PERSONAL PROJECT</div>
-        <div class="project-name">FRET CONNECT</div>
-        <div class="project-desc">A concept-driven social media platform for musicians, singers, and songwriters to collaborate, share work, and receive meaningful feedback.</div>
-        <div class="project-date">Jul 2025 – Present</div>
-      </div>
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// IIIT UNA PROJECT</div>
-        <div class="project-name">VIPVISUALIZE</div>
-        <div class="project-desc">Graph visualizer representing compatibility relations between donor-recipient pairs for kidney exchange optimization using induced and acyclic matching algorithms.</div>
-        <div class="project-date">Feb 2026 – Mar 2026</div>
-      </div>
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// PERSONAL PROJECT</div>
-        <div class="project-name">RESUME-AI</div>
-        <div class="project-desc">AI-assisted resume builder with ATS scoring and LaTeX-based resume generation. Designed to run fully locally without external API dependency.</div>
-        <div class="project-date">Jan 2026 – Mar 2026</div>
-      </div>
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// HPTU PROJECT</div>
-        <div class="project-name">NORTH STARS</div>
-        <div class="project-desc">Travel guide web app for unexplored trekking routes and mountain temples in Dhauladhar. Features blogs, route guidance, local insights, and safe journey information.</div>
-        <div class="project-date">Jan 2025 – Jun 2025</div>
-      </div>
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// HPTU PROJECT</div>
-        <div class="project-name">VEDAGYA</div>
-        <div class="project-desc">Mobile application built with Kotlin and Jetpack libraries that aggregates technology news, trends, and blogs into a single unified platform.</div>
-        <div class="project-date">Jul 2024 – Oct 2024</div>
-      </div>
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// ML PROJECT · HPTU</div>
-        <div class="project-name">ALZHEIMER PREDICTION SYSTEM</div>
-        <div class="project-desc">Machine learning model using regression and decision tree techniques for early Alzheimer's prediction, processing medical data to identify risk patterns.</div>
-        <div class="project-date">Aug 2024 – Nov 2024</div>
-      </div>
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// SIMULATION · HPTU</div>
-        <div class="project-name">TRAFFIC SIMULATION SYSTEM</div>
-        <div class="project-desc">Simulates real-world traffic flow, vehicle movement, signals, and congestion in a controlled environment to demonstrate traffic behavior and management strategies.</div>
-        <div class="project-date">Feb 2024 – May 2024</div>
-      </div>
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// WEB APP · HPTU</div>
-        <div class="project-name">PG LIFE</div>
-        <div class="project-desc">Web application to help users find PGs and rooms in nearby localities with accommodation details, amenities listings, and accessibility information.</div>
-        <div class="project-date">Jul 2023 – Nov 2023</div>
-      </div>
-
-      <div class="project-card fade-in">
-        <div class="project-tag">// EARLY PROJECTS</div>
-        <div class="project-name">KBC GAME &amp; HANGMAN</div>
-        <div class="project-desc">C++ quiz game inspired by Kaun Banega Crorepati and a Python-based Hangman game, developed during school-level programming practice.</div>
-        <div class="project-date">2020 – 2022</div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- SKILLS -->
-<section id="skills">
-  <div class="container">
-    <h2 class="section-title"><i class="fas fa-terminal"></i>Technical Skills</h2>
-    <div class="skills-grid fade-in">
-      <div class="skill-group">
-        <div class="skill-group-title"><i class="fas fa-code"></i>Languages</div>
-        <div class="skill-tags">
-          <span class="skill-tag">C</span>
-          <span class="skill-tag">C++</span>
-          <span class="skill-tag">Python</span>
-          <span class="skill-tag">JavaScript</span>
-          <span class="skill-tag">Kotlin</span>
-        </div>
-      </div>
-      <div class="skill-group">
-        <div class="skill-group-title"><i class="fas fa-globe"></i>Web Development</div>
-        <div class="skill-tags">
-          <span class="skill-tag">HTML</span>
-          <span class="skill-tag">CSS</span>
-          <span class="skill-tag">React.js</span>
-          <span class="skill-tag">Node.js</span>
-          <span class="skill-tag">MongoDB</span>
-          <span class="skill-tag">Flask</span>
-        </div>
-      </div>
-      <div class="skill-group">
-        <div class="skill-group-title"><i class="fas fa-shield-halved"></i>Cybersecurity</div>
-        <div class="skill-tags">
-          <span class="skill-tag">Security Fundamentals</span>
-          <span class="skill-tag">Threat Analysis</span>
-          <span class="skill-tag">Ethical Hacking</span>
-        </div>
-      </div>
-      <div class="skill-group">
-        <div class="skill-group-title"><i class="fas fa-tools"></i>Tools &amp; Platforms</div>
-        <div class="skill-tags">
-          <span class="skill-tag">Git</span>
-          <span class="skill-tag">GitHub</span>
-          <span class="skill-tag">VS Code</span>
-          <span class="skill-tag">PyArmor</span>
-          <span class="skill-tag">Jetpack</span>
-          <span class="skill-tag">Blender</span>
+          <div class="pub-title">Cyber Attacks and Prevention through Past Learnings</div>
+          <div class="pub-journal">International Journal of Electrical, Electronics and Computer Engineering (IJEECE)</div>
+          <div class="pub-date">// Mar 2024</div>
+          <a href="https://www.researchtrend.net/ijeece/current_issue_ijeece.php?taxonomy-id=179" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" id="btn-pub"><i class="fas fa-external-link-alt"></i> View Publication</a>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- CERTIFICATIONS -->
-<section id="certifications">
-  <div class="container">
-    <h2 class="section-title"><i class="fas fa-certificate"></i>Certifications</h2>
-    <div class="certs-grid fade-in">
-      <div class="cert-card"><div class="cert-icon"><i class="fas fa-layer-group"></i></div><div><div class="cert-name">MERN Stack Development</div><div class="cert-org">Excellence Technology · May 2025</div></div></div>
-      <div class="cert-card"><div class="cert-icon"><i class="fab fa-android"></i></div><div><div class="cert-name">Android Development</div><div class="cert-org">Internshala · Sep 2024</div></div></div>
-      <div class="cert-card"><div class="cert-icon"><i class="fas fa-mobile-screen"></i></div><div><div class="cert-name">Android App Development</div><div class="cert-org">NSDC · Sep 2024</div></div></div>
-      <div class="cert-card"><div class="cert-icon"><i class="fas fa-lock"></i></div><div><div class="cert-name">IBM Cyber Security</div><div class="cert-org">IBM · Jun 2024</div></div></div>
-      <div class="cert-card"><div class="cert-icon"><i class="fas fa-code"></i></div><div><div class="cert-name">Web Development</div><div class="cert-org">Internshala · Oct 2023</div></div></div>
-      <div class="cert-card"><div class="cert-icon"><i class="fas fa-cube"></i></div><div><div class="cert-name">Computer Graphics</div><div class="cert-org">NPTEL · Oct 2022</div></div></div>
-      <div class="cert-card"><div class="cert-icon"><i class="fas fa-robot"></i></div><div><div class="cert-name">Generative AI Workshop</div><div class="cert-org">LinkedIn · Jun 2024</div></div></div>
-      <div class="cert-card"><div class="cert-icon"><i class="fas fa-brain"></i></div><div><div class="cert-name">Ethics in Generative AI</div><div class="cert-org">LinkedIn · Jun 2024</div></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- PUBLICATION -->
-<section id="publication">
-  <div class="container">
-    <h2 class="section-title"><i class="fas fa-book-open"></i>Publication</h2>
-    <div class="pub-card fade-in">
-      <div class="pub-icon"><i class="fas fa-file-alt"></i></div>
-      <div>
-        <div class="pub-title">Cyber Attacks and Prevention through Past Learnings</div>
-        <div class="pub-journal">International Journal of Electrical, Electronics and Computer Engineering (IJEECE)</div>
-        <div class="pub-date">// Mar 2024</div>
-        <div style="margin-top:1rem">
-          <a href="https://www.researchtrend.net/ijeece/current_issue_ijeece.php?taxonomy-id=179" target="_blank" class="btn btn-ghost" id="btn-pub" style="font-size:0.85rem;padding:0.4rem 1rem">
-            <i class="fas fa-external-link-alt"></i> View Publication
-          </a>
-        </div>
+  <!-- 09 ACHIEVEMENTS -->
+  <section id="achievements" data-name="TROPHIES">
+    <div class="container">
+      <h2 class="section-title reveal"><i class="fas fa-trophy"></i><span class="scr">Achievements</span></h2>
+      <div class="achieve-grid">
+        <div class="achieve-card panel tilt reveal"><div class="achieve-icon"><i class="fas fa-award"></i></div><div class="achieve-title">GATE CS 2025 Qualified</div><div class="achieve-sub">Computer Science &amp; Engineering</div></div>
+        <div class="achieve-card panel tilt reveal" style="--d:.1s"><div class="achieve-icon"><i class="fas fa-users"></i></div><div class="achieve-title">Club Head &amp; Active Member</div><div class="achieve-sub">HPTU College Activities</div></div>
+        <div class="achieve-card panel tilt reveal" style="--d:.2s"><div class="achieve-icon"><i class="fas fa-baseball-bat-ball"></i></div><div class="achieve-title">Sports &amp; Leadership</div><div class="achieve-sub">Cricket, Badminton &amp; Events Management</div></div>
+        <div class="achieve-card panel tilt reveal" style="--d:.3s"><div class="achieve-icon"><i class="fas fa-star"></i></div><div class="achieve-title">School Achievements</div><div class="achieve-sub">Maths Olympiad Winner · Debate Winner</div></div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ACHIEVEMENTS -->
-<section id="achievements">
-  <div class="container">
-    <h2 class="section-title"><i class="fas fa-trophy"></i>Achievements</h2>
-    <div class="achieve-grid fade-in">
-      <div class="achieve-card">
-        <div class="achieve-icon"><i class="fas fa-award"></i></div>
-        <div class="achieve-title">GATE CS 2025 Qualified</div>
-        <div class="achieve-sub">Computer Science &amp; Engineering</div>
+  <!-- 10 CONTACT / FINALE -->
+  <section id="contact" data-name="SURRENDER">
+    <div class="container finale">
+      <p class="hero-tag reveal">// POSSESSION COMPLETE · 100%</p>
+      <h2 class="finale-title glitch reveal" data-text="YOU'RE ONE OF US NOW">YOU'RE ONE OF US NOW</h2>
+      <p class="finale-sub reveal">You scrolled all the way down. That means one of two things: you're impressed, or you're trapped.<br/>Either way — <b>let's talk.</b></p>
+      <div class="finale-actions reveal">
+        <a href="mailto:vipul26122004@gmail.com" class="btn btn-red btn-lg" id="btn-hire"><i class="fas fa-envelope"></i> Hire Me</a>
+        <a href="https://linkedin.com/in/vipul-s-302734228" target="_blank" rel="noopener" class="btn btn-ghost btn-lg"><i class="fab fa-linkedin"></i> LinkedIn</a>
+        <a href="https://github.com/VIPULCODEX" target="_blank" rel="noopener" class="btn btn-ghost btn-lg"><i class="fab fa-github"></i> GitHub</a>
+        <a href="tel:+918628997357" class="btn btn-ghost btn-lg"><i class="fas fa-phone"></i> +91-8628997357</a>
       </div>
-      <div class="achieve-card">
-        <div class="achieve-icon"><i class="fas fa-users"></i></div>
-        <div class="achieve-title">Club Head &amp; Active Member</div>
-        <div class="achieve-sub">HPTU College Activities</div>
-      </div>
-      <div class="achieve-card">
-        <div class="achieve-icon"><i class="fas fa-cricket-bat-ball"></i></div>
-        <div class="achieve-title">Sports &amp; Leadership</div>
-        <div class="achieve-sub">Cricket, Badminton &amp; Events Management</div>
-      </div>
-      <div class="achieve-card">
-        <div class="achieve-icon"><i class="fas fa-star"></i></div>
-        <div class="achieve-title">School Achievements</div>
-        <div class="achieve-sub">Maths Olympiad Winner · Debate Winner</div>
-      </div>
+      <button id="wake" class="wake-btn reveal" type="button"><i class="fas fa-eye"></i> wake up (return to the surface)</button>
+      <p class="finale-foot reveal">Designed &amp; built by <span>Vipul Sharma</span> · Himachal Pradesh, India<br/>
+        <small>psst — try typing <code>hire</code> on your keyboard.</small></p>
+    </div>
+  </section>
+</main>
+
+<!-- ═════════ PLAYER HUD ═════════ -->
+<div id="hud" role="toolbar" aria-label="Experience controls">
+  <div class="hud-seek-row">
+    <div id="hud-seek" role="slider" aria-label="Position in the web" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+      <div class="seek-fill"></div><div class="seek-ticks"></div><span class="seek-knob"></span>
     </div>
   </div>
-</section>
+  <div class="hud-row">
+    <button id="hud-play" class="hud-btn" type="button" title="Pause the possession (Space)" aria-label="Pause effects"><i class="fas fa-pause"></i></button>
+    <button id="hud-mute" class="hud-btn" type="button" title="Mute (M)" aria-label="Mute"><i class="fas fa-volume-high"></i></button>
+    <input id="hud-vol" class="hud-range" type="range" min="0" max="100" value="60" aria-label="Volume"/>
+    <div class="hud-info">
+      <span id="hud-ch">CH.01 · AWAKENING</span>
+      <span id="hud-pos">POSSESSION 0% · CURIOUS</span>
+    </div>
+    <label class="hud-bright" title="Brightness (+ / −)"><i class="fas fa-sun"></i>
+      <input id="hud-bright" class="hud-range" type="range" min="30" max="150" value="100" aria-label="Brightness"/>
+    </label>
+    <select id="hud-fx" class="hud-select" aria-label="Intensity">
+      <option value="0">CALM</option><option value="1" selected>POSSESSED</option><option value="2">INSANE</option>
+    </select>
+    <button id="hud-fs" class="hud-btn" type="button" title="Fullscreen (F)" aria-label="Fullscreen"><i class="fas fa-expand"></i></button>
+  </div>
+</div>
 
-<!-- FOOTER -->
-<footer>
-  <p>Designed &amp; built by <span>Vipul Sharma</span> · Himachal Pradesh, India</p>
-  <p style="margin-top:0.5rem">
-    <a href="mailto:vipul26122004@gmail.com" style="color:var(--red);text-decoration:none">vipul26122004@gmail.com</a>
-    &nbsp;·&nbsp; +91-8628997357
-  </p>
-</footer>
-
-<script>
-/* ═══════════════════════════════
-   ANIMATED SPIDER WEB CANVAS
-═══════════════════════════════ */
-const canvas = document.getElementById('web-canvas');
-const ctx = canvas.getContext('2d');
-let W, H, nodes, mouse = { x: -9999, y: -9999 };
-const NODE_CNT = 80;
-const MAX_DIST = 160;
-const MOUSE_DIST = 180;
-
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
-
-function Node() {
-  this.x = Math.random() * W;
-  this.y = Math.random() * H;
-  this.vx = (Math.random() - 0.5) * 0.35;
-  this.vy = (Math.random() - 0.5) * 0.35;
-  this.r = Math.random() * 1.5 + 0.5;
-}
-
-function initNodes() {
-  nodes = Array.from({ length: NODE_CNT }, () => new Node());
-}
-
-function drawWeb() {
-  ctx.clearRect(0, 0, W, H);
-
-  // Draw connections
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      const dx = nodes[i].x - nodes[j].x;
-      const dy = nodes[i].y - nodes[j].y;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      if (d < MAX_DIST) {
-        const alpha = (1 - d / MAX_DIST) * 0.35;
-        ctx.beginPath();
-        ctx.moveTo(nodes[i].x, nodes[i].y);
-        ctx.lineTo(nodes[j].x, nodes[j].y);
-        ctx.strokeStyle = `rgba(220,20,60,${alpha})`;
-        ctx.lineWidth = 0.6;
-        ctx.stroke();
-      }
-    }
-    // Mouse connections
-    const mdx = nodes[i].x - mouse.x;
-    const mdy = nodes[i].y - mouse.y;
-    const md = Math.sqrt(mdx * mdx + mdy * mdy);
-    if (md < MOUSE_DIST) {
-      const alpha = (1 - md / MOUSE_DIST) * 0.7;
-      ctx.beginPath();
-      ctx.moveTo(nodes[i].x, nodes[i].y);
-      ctx.lineTo(mouse.x, mouse.y);
-      ctx.strokeStyle = `rgba(0,212,255,${alpha})`;
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-    }
-  }
-
-  // Draw nodes
-  nodes.forEach(n => {
-    ctx.beginPath();
-    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(220,20,60,0.7)';
-    ctx.fill();
-
-    // Move
-    n.x += n.vx;
-    n.y += n.vy;
-    if (n.x < 0 || n.x > W) n.vx *= -1;
-    if (n.y < 0 || n.y > H) n.vy *= -1;
-  });
-
-  requestAnimationFrame(drawWeb);
-}
-
-window.addEventListener('resize', () => { resize(); initNodes(); });
-window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
-
-resize();
-initNodes();
-drawWeb();
-
-/* ═══════════════════════════════
-   SCROLL FADE-IN
-═══════════════════════════════ */
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-</script>
+<script src="js/ui.js" defer></script>
+<script type="module" src="js/scene.js" onerror="document.body.classList.add('no-gl')"></script>
 </body>
 </html>
