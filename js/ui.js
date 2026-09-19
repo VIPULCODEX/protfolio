@@ -28,151 +28,8 @@
     mouse: { x: 0, y: 0 },
     chapters: [],             // [{ p, name }]
     chapter: 0,
-    fxMul() { return [0.15, 1, 2][this.fx]; },
+    fxMul() { return [0.1, 0.45, 2][this.fx]; },
     kick(a) { this.glitch = Math.max(this.glitch, a * this.fxMul()); },
-  });
-
-  /* ═══════════════════════════════════════════
-     AUDIO — fully synthesised (no files to load)
-  ═══════════════════════════════════════════ */
-  const Sound = (WEB.sfx = {
-    ctx: null, master: null, on: true, vol: 0.6,
-
-    init() {
-      if (this.ctx) return;
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        const c = (this.ctx = new AC());
-        this.master = c.createGain();
-        this.master.gain.value = 0;
-        this.master.connect(c.destination);
-
-        // sub drone: detuned saws through a slowly breathing lowpass
-        const lp = (this.lp = c.createBiquadFilter());
-        lp.type = 'lowpass'; lp.frequency.value = 170; lp.Q.value = 5;
-        const dg = c.createGain(); dg.gain.value = 0.2;
-        lp.connect(dg); dg.connect(this.master);
-        [[41, 'sawtooth', 0.5], [41.8, 'sawtooth', 0.5], [82.4, 'sine', 0.6], [55, 'triangle', 0.4]].forEach(([f, t, v]) => {
-          const o = c.createOscillator(); o.type = t; o.frequency.value = f;
-          const g = c.createGain(); g.gain.value = v;
-          o.connect(g); g.connect(lp); o.start();
-        });
-        const lfo = c.createOscillator(); lfo.frequency.value = 0.07;
-        const lg = c.createGain(); lg.gain.value = 90;
-        lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
-
-        // tension tone — creeps in as you go deeper
-        const to = c.createOscillator(); to.type = 'sine'; to.frequency.value = 932;
-        const tv = c.createOscillator(); tv.frequency.value = 5.5;
-        const tvg = c.createGain(); tvg.gain.value = 7;
-        tv.connect(tvg); tvg.connect(to.frequency);
-        this.tension = c.createGain(); this.tension.gain.value = 0;
-        to.connect(this.tension); this.tension.connect(this.master);
-        to.start(); tv.start();
-
-        // noise buffer → cave wind + whispers
-        const len = c.sampleRate * 2;
-        const buf = c.createBuffer(1, len, c.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-        this.noise = buf;
-        const ns = c.createBufferSource(); ns.buffer = buf; ns.loop = true;
-        const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 480; bp.Q.value = 0.8;
-        const ng = c.createGain(); ng.gain.value = 0.05;
-        ns.connect(bp); bp.connect(ng); ng.connect(this.master); ns.start();
-        const wl = c.createOscillator(); wl.frequency.value = 0.11;
-        const wg = c.createGain(); wg.gain.value = 260;
-        wl.connect(wg); wg.connect(bp.frequency); wl.start();
-      } catch (e) { this.ctx = null; }
-    },
-
-    resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
-    suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend(); },
-
-    apply() {
-      if (!this.ctx) return;
-      this.master.gain.setTargetAtTime(this.on ? this.vol * 0.9 : 0, this.ctx.currentTime, 0.25);
-    },
-
-    depth(p) {
-      if (!this.ctx) return;
-      const t = this.ctx.currentTime;
-      this.lp.frequency.setTargetAtTime(150 + p * 320, t, 0.4);
-      this.tension.gain.setTargetAtTime(p * p * 0.018, t, 0.6);
-    },
-
-    env(g, peak, a, r) {
-      const t = this.ctx.currentTime;
-      g.gain.cancelScheduledValues(t);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(peak, t + a);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + a + r);
-    },
-
-    thump(v = 1) {
-      if (!this.ctx || !this.on) return;
-      const c = this.ctx, t = c.currentTime;
-      const o = c.createOscillator(); o.type = 'sine';
-      o.frequency.setValueAtTime(78, t);
-      o.frequency.exponentialRampToValueAtTime(34, t + 0.16);
-      const g = c.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.9 * v, t + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
-      o.connect(g); g.connect(this.master);
-      o.start(t); o.stop(t + 0.3);
-    },
-
-    tick() {
-      if (!this.ctx || !this.on || WEB.paused) return;
-      const c = this.ctx, t = c.currentTime;
-      const o = c.createOscillator(); o.type = 'square';
-      o.frequency.setValueAtTime(rand(1500, 2200), t);
-      const g = c.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.03, t + 0.004);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-      o.connect(g); g.connect(this.master);
-      o.start(t); o.stop(t + 0.07);
-    },
-
-    sting() {
-      if (!this.ctx || !this.on) return;
-      const c = this.ctx, t = c.currentTime;
-      const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400;
-      const g = c.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.22, t + 0.03);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
-      f.connect(g); g.connect(this.master);
-      [220, 233.1, 311].forEach((hz, i) => {
-        const o = c.createOscillator(); o.type = 'sawtooth';
-        o.frequency.setValueAtTime(hz * 1.5, t);
-        o.frequency.exponentialRampToValueAtTime(hz * 0.5, t + 1);
-        o.detune.value = (i - 1) * 14;
-        o.connect(f); o.start(t); o.stop(t + 1.2);
-      });
-    },
-
-    whisper() {
-      if (!this.ctx || !this.on || !this.noise) return;
-      const c = this.ctx, t = c.currentTime, dur = rand(0.5, 1.1);
-      const src = c.createBufferSource(); src.buffer = this.noise; src.loop = true;
-      const b1 = c.createBiquadFilter(); b1.type = 'bandpass'; b1.Q.value = 7;
-      b1.frequency.setValueAtTime(rand(500, 900), t);
-      b1.frequency.linearRampToValueAtTime(rand(1200, 2600), t + dur);
-      const b2 = c.createBiquadFilter(); b2.type = 'bandpass'; b2.Q.value = 5; b2.frequency.value = rand(2500, 4200);
-      const g = c.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.5, t + dur * 0.35);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(b1); b1.connect(b2); b2.connect(g);
-      let out = g;
-      if (c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = rand(-1, 1); g.connect(p); out = p; }
-      out.connect(this.master);
-      src.start(t, rand(0, 1)); src.stop(t + dur + 0.1);
-    },
   });
 
   /* ═══════════════════════════════════════════
@@ -209,51 +66,32 @@
   $('#enter').addEventListener('click', () => {
     if (WEB.entered) return;
     WEB.entered = true;
-    Sound.on = $('#opt-sound').checked;
-    Sound.init(); Sound.resume(); Sound.apply();
-    syncMute();
     if ($('#opt-fs').checked) toggleFullscreen(true);
 
     body.classList.remove('locked');
     body.classList.add('entered');
     gate.classList.add('gone');
-    WEB.kick(1.2); flash('white', 140); Sound.sting(); Sound.thump(1);
+    WEB.kick(0.9); flash('white', 120);
     window.scrollTo(0, 0);
     measure();
     startReveals();
     typeLog();
     startRoles();
     beatAt = clock + 800;
-    nextWhisper = clock + 6000;
-    setTimeout(() => showWhisper('स्वागत है… 🕷️'), 2200);
+    nextWhisper = clock + 12000;
+    
   });
 
   /* ═══════════════════════════════════════════
      PLAYER HUD
   ═══════════════════════════════════════════ */
-  const hudPlay = $('#hud-play'), hudMute = $('#hud-mute'), hudVol = $('#hud-vol'), hudFs = $('#hud-fs');
-
-  function syncMute() {
-    hudMute.innerHTML = `<i class="fas ${!Sound.on || Sound.vol === 0 ? 'fa-volume-xmark' : Sound.vol < 0.4 ? 'fa-volume-low' : 'fa-volume-high'}"></i>`;
-  }
-  hudMute.addEventListener('click', toggleMute);
-  function toggleMute() {
-    Sound.init(); Sound.resume();
-    Sound.on = !Sound.on; Sound.apply(); syncMute();
-  }
-  hudVol.addEventListener('input', e => {
-    Sound.vol = +e.target.value / 100;
-    if (Sound.vol > 0 && !Sound.on) Sound.on = true;
-    Sound.init(); Sound.resume(); Sound.apply(); syncMute();
-  });
+  const hudPlay = $('#hud-play'), hudFs = $('#hud-fs');
 
   function setPaused(v) {
     WEB.paused = v;
     body.classList.toggle('paused', v);
     hudPlay.innerHTML = `<i class="fas ${v ? 'fa-play' : 'fa-pause'}"></i>`;
     hudPlay.title = v ? 'Resume the possession (Space)' : 'Pause the possession (Space)';
-    if (v) { Sound.suspend(); showWhisper(pick(['PAUSED… FOR NOW', 'YOU CAN\'T PAUSE ME', 'रुक गए? मैं नहीं रुकूँगा']), true); }
-    else Sound.resume();
   }
   hudPlay.addEventListener('click', () => setPaused(!WEB.paused));
 
@@ -278,7 +116,6 @@
     if (!WEB.entered) return;
     const k = e.key.toLowerCase();
     if (k === ' ' && tag !== 'button' && tag !== 'a' && tag !== 'select') { e.preventDefault(); setPaused(!WEB.paused); }
-    else if (k === 'm') toggleMute();
     else if (k === 'f') toggleFullscreen();
     else if (k === '+' || k === '=') setBright(WEB.bright * 100 + 5);
     else if (k === '-' || k === '_') setBright(WEB.bright * 100 - 5);
@@ -286,8 +123,8 @@
     typed = (typed + k).slice(-4);
     if (typed === 'hire') {
       typed = '';
-      WEB.kick(1.5); flash('red', 220); Sound.sting();
-      showWhisper('GOOD CHOICE.', true);
+      WEB.kick(1.5); flash('red', 220);
+      showWhisper('GOOD CHOICE', true);
       setTimeout(() => $('#contact').scrollIntoView({ behavior: 'smooth' }), 400);
     }
   });
@@ -314,14 +151,14 @@
     if (e.key === 'ArrowLeft') window.scrollBy({ top: -innerHeight * 0.8, behavior: 'smooth' });
   });
 
-  const STAGES = [[0.15, 'CURIOUS'], [0.4, 'HOOKED'], [0.7, 'POSSESSED'], [0.985, 'LOST'], [2, 'ONE OF US']];
+  const STAGES = [[0.15, 'SPIDER-SENSE'], [0.4, 'TINGLING'], [0.7, 'BONDING'], [0.985, 'SYMBIOTE'], [2, 'VENOM']];
   const hudCh = $('#hud-ch'), hudPos = $('#hud-pos');
   function updateHud() {
     const p = WEB.p;
     seekFill.style.width = seekKnob.style.left = (p * 100).toFixed(2) + '%';
     seek.setAttribute('aria-valuenow', Math.round(p * 100));
     const stage = STAGES.find(s => p < s[0])[1];
-    hudPos.textContent = `POSSESSION ${String(Math.round(p * 100)).padStart(2, '0')}% · ${stage}`;
+    hudPos.textContent = `SYMBIOTE BOND ${String(Math.round(p * 100)).padStart(2, '0')}% · ${stage}`;
   }
 
   /* ═══════════════════════════════════════════
@@ -363,7 +200,7 @@
       hudCh.textContent = `CH.${String(cur + 1).padStart(2, '0')} · ${s.dataset.name}`;
       navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + s.id));
       if (!first && WEB.entered) {
-        WEB.kick(0.9); Sound.sting(); Sound.thump(1);
+        WEB.kick(0.9);
         if (WEB.fx > 0 && Math.random() < 0.8) showWhisper();
       }
     }
@@ -371,10 +208,9 @@
     body.classList.toggle('finale-on', fin);
     if (fin && !finaleSeen && WEB.entered) {
       finaleSeen = true;
-      WEB.kick(2); flash('red', 200); Sound.sting();
-      showWhisper('WELCOME HOME.', true);
+      WEB.kick(2); flash('red', 200);
+      showWhisper('WE ARE VENOM', true);
     }
-    Sound.depth(WEB.p);
     updateHud();
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -386,7 +222,7 @@
   $('#wake').addEventListener('click', () => {
     finaleSeen = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => showWhisper('…you will be back.', true), 1200);
+    setTimeout(() => showWhisper('SEE YOU SOON', true), 1200);
   });
 
   /* ═══════════════════════════════════════════
@@ -394,29 +230,28 @@
   ═══════════════════════════════════════════ */
   const whisperEl = $('#whisper'), flashEl = $('#flash');
   const WHISPERS = [
-    'STAY', 'DON\'T LEAVE', 'HE IS WATCHING', 'HIRE HIM', 'YOU CAN\'T LOOK AWAY', 'KEEP SCROLLING',
-    'WE SEE YOU', 'GO DEEPER', 'YOU BELONG HERE', 'NOBODY LEAVES', 'CLOSING THE TAB? NO.',
-    'रुक जाओ', 'अब तुम हमारे हो', 'कहाँ जा रहे हो?', 'पूरा देखे बिना नहीं जाओगे', 'नीचे आओ…', 'वो देख रहा है',
+    'SPIDER-SENSE TINGLING', 'WE ARE VENOM', 'STAY IN THE WEB', 'HIRE HIM', 'KEEP SCROLLING',
+    'GO DEEPER', 'STILL HERE?', 'THE WEB HOLDS', 'ALMOST THERE',
   ];
   let whisperTimer = 0;
   function showWhisper(text, force) {
     if (!force && (WEB.fx === 0 || WEB.paused || !WEB.entered)) return;
     if (WEB.fx === 0 && !force) return;
     clearTimeout(whisperTimer);
-    const rot = rand(-8, 8);
+    const rot = rand(-4, 4);
     whisperEl.textContent = text || pick(WHISPERS);
     whisperEl.style.setProperty('--rot', rot + 'deg');
-    whisperEl.style.fontSize = rand(2, 6.5).toFixed(2) + 'rem';
-    whisperEl.style.left = rand(28, 72).toFixed(1) + '%';
-    whisperEl.style.top = rand(22, 78).toFixed(1) + '%';
+    whisperEl.style.fontSize = rand(1.2, 2.4).toFixed(2) + 'rem';
+    whisperEl.style.left = (Math.random() < 0.5 ? rand(10, 18) : rand(82, 90)).toFixed(1) + '%';
+    whisperEl.style.top = rand(20, 75).toFixed(1) + '%';
     whisperEl.style.transform = `translate(-50%,-50%) rotate(${rot}deg)`;
     whisperEl.classList.add('on');
-    Sound.whisper();
-    WEB.kick(0.6);
-    whisperTimer = setTimeout(() => whisperEl.classList.remove('on'), force ? 1100 : rand(160, 520));
+    WEB.kick(0.15);
+    whisperTimer = setTimeout(() => whisperEl.classList.remove('on'), force ? 1200 : rand(500, 900));
   }
 
   function flash(kind, ms) {
+    if (WEB.fx < 2 && kind !== 'white') return;
     if (WEB.fx === 0) return;
     flashEl.className = kind;
     flashEl.style.opacity = kind === 'white' ? 0.55 : 0.75;
@@ -428,7 +263,6 @@
 
   function beat(v) {
     WEB.heart = Math.max(WEB.heart, v);
-    Sound.thump(v);
   }
 
   /* ═══════════════════════════════════════════
@@ -446,7 +280,6 @@
   document.addEventListener('pointerover', e => {
     const t = e.target.closest && e.target.closest('a,button,label,select,input,.tilt,.fx-btn,#hud-seek');
     ring.classList.toggle('hot', !!t);
-    if (t) Sound.tick();
   });
 
   // exit-intent + tab-blur
@@ -454,7 +287,6 @@
   document.addEventListener('mouseout', e => {
     if (!WEB.entered || WEB.fx === 0 || e.relatedTarget || e.clientY > 8) return;
     exitEl.classList.add('on');
-    Sound.sting();
     setTimeout(() => exitEl.classList.remove('on'), 1300);
   });
   const baseTitle = document.title;
@@ -462,13 +294,13 @@
   document.addEventListener('visibilitychange', () => {
     clearInterval(titleIv);
     if (document.hidden && WEB.entered) {
-      const t = ['👁 I SEE YOU…', 'Come back… 🕷️', 'DON\'T LEAVE ME', 'वापस आओ…'];
+      const t = ['Still swinging? 🕷️', 'The web misses you'];
       let i = 0;
       document.title = t[0];
       titleIv = setInterval(() => (document.title = t[++i % t.length]), 1200);
     } else {
-      document.title = WEB.entered ? '🕷️ He\'s watching you' : baseTitle;
-      if (WEB.entered) { WEB.kick(1); showWhisper('WELCOME BACK.', true); setTimeout(() => (document.title = baseTitle), 4000); }
+      document.title = baseTitle;
+      
     }
   });
 
@@ -506,11 +338,11 @@
 
       if (WEB.fx > 0 && clock >= nextWhisper) {
         showWhisper();
-        nextWhisper = clock + rand(8000, 16000) / (WEB.fx === 2 ? 2.2 : 1);
+        nextWhisper = clock + rand(14000, 26000) / (WEB.fx === 2 ? 2.2 : 1);
       }
       // random micro-blackouts & inversions
-      if (WEB.fx > 0 && clock >= nextBlink) {
-        if (WEB.fx === 2 && Math.random() < 0.5) WEB.invert = 1;
+      if (WEB.fx === 2 && clock >= nextBlink) {
+        if (Math.random() < 0.5) WEB.invert = 1;
         flash(Math.random() < 0.35 ? 'red' : 'black', rand(40, 90));
         WEB.kick(0.8);
         nextBlink = clock + rand(9000, 22000) / (WEB.fx === 2 ? 2.5 : 1);
@@ -571,7 +403,7 @@
 
   /* hero: role rotator + terminal log */
   function startRoles() {
-    const roles = ['Web Developer', 'ML Engineer', 'Cybersecurity Enthusiast', 'GATE CS 2025 Qualified', 'M.Tech @ IIIT Una', 'Your Next Hire'];
+    const roles = ['Web Developer', 'ML Engineer', 'Cybersecurity Enthusiast', 'GATE CS 2025 Qualified', 'M.Tech @ IIIT Una'];
     const el = $('#role');
     let ri = 0, ci = roles[0].length, del = true;
     (function loop() {
@@ -585,10 +417,10 @@
   }
   function typeLog() {
     const lines = [
-      '> scanning visitor ............ <b>found</b>',
-      '> subject: VIPUL SHARMA // M.TECH CSE // IIIT UNA',
-      '> possession protocol ......... <b>ACTIVE</b>',
-      '> exit routes ................. <b>0</b>',
+      '> loading profile ............ <b>done</b>',
+      '> user: VIPUL SHARMA // M.TECH CSE // IIIT UNA',
+      '> spider-sense ............... <b>ACTIVE</b>',
+      '> symbiote bond .............. <b>0%</b>',
     ];
     const log = $('#hero-log');
     let li = 0;

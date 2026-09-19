@@ -24,6 +24,7 @@ function boot() {
   const lowPower = isTouch || (navigator.hardwareConcurrency || 8) <= 4;
   const rand = (a, b) => a + Math.random() * (b - a);
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const smoothstep01 = (x, a, b) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
   /* ─────────── renderer / camera ─────────── */
   const host = document.getElementById('gl');
@@ -58,7 +59,7 @@ function boot() {
       p.xy += aDir * br;
       vec4 mv = modelViewMatrix * vec4(p, 1.0);
       float d = length(mv.xyz);
-      vFade = exp(-d * 0.036) * smoothstep(0.4, 4.0, d);
+      vFade = exp(-d * 0.03) * smoothstep(0.4, 4.0, d);
       vZ = -p.z; vRnd = aRnd;
       gl_Position = projectionMatrix * mv;
     }`;
@@ -68,8 +69,10 @@ function boot() {
     varying float vZ, vRnd, vFade;
     void main() {
       float pulse = pow(0.5 + 0.5 * sin(vZ * 0.28 - uTime * 3.2 + vRnd * 2.0), 10.0);
-      vec3 col = mix(uA, uB, clamp(vRnd * 0.5 + pulse * 0.8, 0.0, 1.0));
-      float a = vFade * (0.36 + pulse * 1.5 + uHeart * 0.55);
+      vec3 base = vec3(0.6, 0.66, 0.8);                         // silvery web silk
+      vec3 energy = mix(uA, uB, clamp(vRnd, 0.0, 1.0));         // red / blue pulses running along it
+      vec3 col = mix(base, energy, clamp(pulse * 1.2, 0.0, 1.0));
+      float a = vFade * (0.5 + pulse * 1.5 + uHeart * 0.3);
       gl_FragColor = vec4(col * a, 1.0);
     }`;
   const ptVS = /* glsl */`
@@ -100,7 +103,7 @@ function boot() {
 
   const uni = {
     uTime: { value: 0 }, uHeart: { value: 0 },
-    uA: { value: new THREE.Color(0xdc143c) }, uB: { value: new THREE.Color(0x00d4ff) },
+    uA: { value: new THREE.Color(0xe62429) }, uB: { value: new THREE.Color(0x4c8dff) },
   };
 
   // build strands as non-indexed line segments
@@ -150,7 +153,7 @@ function boot() {
   const ptUni = (color, drift) => ({
     uTime: uni.uTime, uHeart: uni.uHeart, uScale: { value: 800 }, uDrift: { value: drift }, uColor: { value: new THREE.Color(color) },
   });
-  const nodeUni = ptUni(0xff2d55, 0);
+  const nodeUni = ptUni(0xffffff, 0);
   const nodeGeo = new THREE.BufferGeometry();
   nodeGeo.setAttribute('position', new THREE.Float32BufferAttribute(nodeP, 3));
   nodeGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(nodeS, 1));
@@ -169,7 +172,7 @@ function boot() {
     dP.push(cx(t) + Math.cos(a) * r, cy(t) + Math.sin(a) * r, -t);
     dS.push(rand(0.05, 0.16)); dR.push(Math.random());
   }
-  const dustUni = ptUni(0xbfd8ff, 1);
+  const dustUni = ptUni(0xcfe0ff, 1);
   const dustGeo = new THREE.BufferGeometry();
   dustGeo.setAttribute('position', new THREE.Float32BufferAttribute(dP, 3));
   dustGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(dS, 1));
@@ -183,7 +186,7 @@ function boot() {
   /* ─────────── chapter gates (mini webs you fly through) ─────────── */
   const gates = new THREE.Group();
   scene.add(gates);
-  const gateMat = new THREE.LineBasicMaterial({ color: 0xff2d55, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  const gateMat = new THREE.LineBasicMaterial({ color: 0xff3b3f, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
   function makeGate(R0) {
     const g = new THREE.Group();
     const pts = [];
@@ -202,9 +205,9 @@ function boot() {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
     g.add(new THREE.LineSegments(geo, gateMat));
-    const torus = new THREE.Mesh(new THREE.TorusGeometry(R0 * 1.04, 0.09, 8, 72), new THREE.MeshBasicMaterial({ color: 0xff1a44, toneMapped: false }));
+    const torus = new THREE.Mesh(new THREE.TorusGeometry(R0 * 1.04, 0.09, 8, 72), new THREE.MeshBasicMaterial({ color: 0xe62429, toneMapped: false }));
     g.add(torus);
-    const inner = new THREE.Mesh(new THREE.TorusGeometry(R0 * 0.62, 0.05, 8, 60), new THREE.MeshBasicMaterial({ color: 0x00d4ff, toneMapped: false }));
+    const inner = new THREE.Mesh(new THREE.TorusGeometry(R0 * 0.62, 0.05, 8, 60), new THREE.MeshBasicMaterial({ color: 0x4c8dff, toneMapped: false }));
     g.add(inner);
     g.userData.inner = inner;
     return g;
@@ -224,27 +227,32 @@ function boot() {
   window.addEventListener('web:layout', layoutGates);
 
   /* ─────────── spiders ─────────── */
-  const bodyMat = new THREE.MeshBasicMaterial({ color: 0x14030a });
-  const rimMat = new THREE.MeshBasicMaterial({ color: 0x7a1128, side: THREE.BackSide });
-  const legMat = new THREE.LineBasicMaterial({ color: 0xff2d55, toneMapped: false });
-  const redGlow = new THREE.MeshBasicMaterial({ color: 0xff1030, toneMapped: false });
+  const skin = (body, rim, leg, glow) => ({
+    body: new THREE.MeshBasicMaterial({ color: body }),
+    rim: new THREE.MeshBasicMaterial({ color: rim, side: THREE.BackSide }),
+    leg: new THREE.LineBasicMaterial({ color: leg, toneMapped: false }),
+    glow: new THREE.MeshBasicMaterial({ color: glow, toneMapped: false }),
+  });
+  const SKIN_SPIDEY = skin(0x120508, 0x8a1418, 0xff3b3f, 0xff3b3f);
+  const SKIN_VENOM = skin(0x020204, 0x8b93a8, 0xf2f4fa, 0xffffff);
   const geoAb = new THREE.SphereGeometry(0.55, 14, 10), geoTh = new THREE.SphereGeometry(0.34, 12, 8), geoDot = new THREE.SphereGeometry(0.07, 6, 6);
 
-  function makeSpider(scale) {
+  function makeSpider(scale, venom) {
+    const M = venom ? SKIN_VENOM : SKIN_SPIDEY;
     const g = new THREE.Group();
-    const add = (geo, x, y, z, sx = 1, sy = 1, sz = 1, mat = bodyMat, rim = true) => {
+    const add = (geo, x, y, z, sx = 1, sy = 1, sz = 1, mat = M.body, rim = true) => {
       const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); g.add(m);
-      if (rim) { const r = new THREE.Mesh(geo, rimMat); r.position.copy(m.position); r.scale.set(sx * 1.1, sy * 1.1, sz * 1.1); g.add(r); }
+      if (rim) { const r = new THREE.Mesh(geo, M.rim); r.position.copy(m.position); r.scale.set(sx * 1.1, sy * 1.1, sz * 1.1); g.add(r); }
     };
     add(geoAb, 0, 0.85, -0.55, 1, 0.85, 1.3);
     add(geoTh, 0, 0.8, 0.28);
-    add(geoDot, 0, 1.31, -0.62, 1.5, 0.6, 2.4, redGlow, false);         // hourglass mark
-    add(geoDot, -0.11, 0.93, 0.56, 1, 1, 1, redGlow, false);
-    add(geoDot, 0.11, 0.93, 0.56, 1, 1, 1, redGlow, false);
+    add(geoDot, 0, 1.31, -0.62, 1.5, 0.6, 2.4, M.glow, false);         // hourglass mark
+    add(geoDot, -0.11, 0.93, 0.56, 1, 1, 1, M.glow, false);
+    add(geoDot, 0.11, 0.93, 0.56, 1, 1, 1, M.glow, false);
     const pos = new Float32Array(8 * 4 * 3);
     const lg = new THREE.BufferGeometry();
     lg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const legs = new THREE.LineSegments(lg, legMat);
+    const legs = new THREE.LineSegments(lg, M.leg);
     legs.frustumCulled = false;
     g.add(legs);
     g.userData.pos = pos; g.userData.lg = lg; g.userData.ph = Math.random() * 10;
@@ -275,7 +283,7 @@ function boot() {
   const crawlers = [];
   const NSP = lowPower ? 10 : 18;
   for (let i = 0; i < NSP; i++) {
-    const s = makeSpider(rand(0.9, 2.3));
+    const s = makeSpider(rand(0.9, 2.3), i % 2 === 1);
     const c = { g: s, t: i < 5 ? rand(20, 140) : rand(0, L), th: rand(0, Math.PI * 2), v: rand(1.5, 5) * (Math.random() < 0.5 ? 1 : -1), dth: rand(-0.06, 0.06), sp: rand(5, 11) };
     crawlers.push(c); scene.add(s);
   }
@@ -295,7 +303,7 @@ function boot() {
   }
 
   // the one that drops in front of you
-  const dropper = { g: makeSpider(1.5), state: 0, t: 0, next: rand(14, 24), off: new THREE.Vector3(), thread: null };
+  const dropper = { g: makeSpider(1.5, true), state: 0, t: 0, next: rand(14, 24), off: new THREE.Vector3(), thread: null };
   {
     const tg = new THREE.BufferGeometry();
     tg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 40, 0], 3));
@@ -311,7 +319,7 @@ function boot() {
       if (d.next <= 0 && WEB.entered && WEB.fx > 0 && WEB.p > 0.03) {
         d.state = 1; d.t = 0;
         d.off.set(rand(-4, 4), 0, rand(9, 12));
-        WEB.kick(1.2); WEB.sfx && WEB.sfx.sting();
+        WEB.kick(0.5);
         d.g.visible = d.thread.visible = true;
       }
       return;
@@ -336,26 +344,21 @@ function boot() {
     }
   }
 
-  /* ─────────── eight eyes that watch the cursor ─────────── */
+  /* ─────────── Venom's eyes — two white, angry, cursor-following ─────────── */
   const eyes = new THREE.Group();
   scene.add(eyes);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff1030, toneMapped: false });
-  const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-  const EYE_LAYOUT = [
-    [-1.7, -0.4, 1.5], [1.7, -0.4, 1.5],
-    [-3.7, 0.8, 0.95], [3.7, 0.8, 0.95],
-    [-2.5, 2.3, 0.62], [2.5, 2.3, 0.62],
-    [-0.95, 2.0, 0.5], [0.95, 2.0, 0.5],
-  ];
-  const eyeList = EYE_LAYOUT.map(([x, y, r]) => {
-    const g = new THREE.Group();
-    g.position.set(x, y, 0);
-    g.add(new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), eyeMat));
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(r * 0.62, 16, 12), pupilMat);
-    pupil.scale.set(0.3, 1, 0.3);
-    g.add(pupil);
-    eyes.add(g);
-    return { g, pupil, r };
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false, side: THREE.DoubleSide });
+  const eyeShape = new THREE.Shape();
+  eyeShape.moveTo(-2.7, 1.1);
+  eyeShape.quadraticCurveTo(0.3, 2.3, 2.6, -1.8);     // sweeping top edge down to the inner point
+  eyeShape.quadraticCurveTo(-0.4, -0.8, -2.7, 1.1);   // underside
+  const eyeGeo = new THREE.ShapeGeometry(eyeShape, 28);
+  const eyeList = [-1, 1].map(side => {
+    const m = new THREE.Mesh(eyeGeo, eyeMat);
+    m.position.x = side * 3.5;
+    m.scale.x = -side;                                  // mirror the right eye
+    eyes.add(m);
+    return m;
   });
 
   /* ─────────── post-processing ─────────── */
@@ -369,15 +372,20 @@ function boot() {
   const fxPass = new ShaderPass({
     uniforms: {
       tDiffuse: { value: null }, uTime: { value: 0 }, uGlitch: { value: 0 }, uAber: { value: 0.002 },
-      uNoise: { value: 0.05 }, uInvert: { value: 0 }, uRes: { value: new THREE.Vector2(innerWidth, innerHeight) },
+      uNoise: { value: 0.05 }, uInvert: { value: 0 }, uSym: { value: 0 }, uRes: { value: new THREE.Vector2(innerWidth, innerHeight) },
     },
     vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: /* glsl */`
       uniform sampler2D tDiffuse;
-      uniform float uTime, uGlitch, uAber, uNoise, uInvert;
+      uniform float uTime, uGlitch, uAber, uNoise, uInvert, uSym;
       uniform vec2 uRes;
       varying vec2 vUv;
       float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float vnoise(vec2 p){
+        vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a * vnoise(p); p *= 2.03; a *= 0.5; } return v; }
       void main() {
         vec2 uv = vUv;
         vec2 c = uv - 0.5;
@@ -388,7 +396,7 @@ function boot() {
         float tstep = floor(uTime * 14.0);
         float band = floor(uv.y * 28.0);
         float g = step(1.0 - uGlitch * 0.5, hash(vec2(band, tstep))) * min(uGlitch, 1.0);
-        uv.x = fract(uv.x + (hash(vec2(band, tstep + 7.0)) - 0.5) * 0.22 * g);
+        uv.x = fract(uv.x + (hash(vec2(band, tstep + 7.0)) - 0.5) * 0.09 * g);
         // vertical roll on big hits
         uv.y += step(1.6, uGlitch) * (hash(vec2(tstep, 3.0)) - 0.5) * 0.08;
 
@@ -401,6 +409,17 @@ function boot() {
         // scanlines + grain
         col *= 0.93 + 0.07 * sin(uv.y * uRes.y * 1.6);
         col += (hash(uv * uRes + uTime) - 0.5) * uNoise;
+
+        // Venom: black symbiote creeping in from the edges of the frame
+        float aspect = uRes.x / uRes.y;
+        float ed = min(min(vUv.x, 1.0 - vUv.x) * aspect, min(vUv.y, 1.0 - vUv.y));
+        float nz = fbm(vec2(vUv.x * aspect * 3.0, vUv.y * 3.0 + uTime * 0.05));
+        float thr = uSym * 0.2 + (nz - 0.5) * 0.3 * uSym;
+        float ink = 1.0 - smoothstep(thr - 0.012, thr + 0.012, ed);
+        float rim = smoothstep(0.012, 0.0, abs(ed - thr)) * uSym;
+        col = mix(col, vec3(0.006, 0.008, 0.016), ink);
+        col += rim * vec3(0.25, 0.32, 0.5) * (1.0 - ink);
+
         col = mix(col, 1.0 - col, uInvert);
         gl_FragColor = vec4(col, 1.0);
       }`,
@@ -410,8 +429,8 @@ function boot() {
 
   /* ─────────── palette that drifts with depth ─────────── */
   const PAL = [
-    [0xdc143c, 0x00d4ff], [0xff0a6c, 0x8a2be2], [0x8a2be2, 0x00ffd0],
-    [0xff3b30, 0xffb000], [0xdc143c, 0x00d4ff], [0xff0033, 0xff5a7a],
+    [0xe62429, 0x2b6cff], [0xff3b3f, 0x4c8dff], [0xd0d4e4, 0x2b6cff],
+    [0xffffff, 0x9aa4c0], [0xf5f7ff, 0xf5f7ff], [0xffffff, 0xffffff],
   ].map(([a, b]) => [new THREE.Color(a), new THREE.Color(b)]);
   const _ca = new THREE.Color(), _cb = new THREE.Color();
   function palette(p) {
@@ -494,31 +513,30 @@ function boot() {
 
     /* eyes — hover ahead of you, creeping closer the deeper you go */
     const D = 70 - ps * 46;
-    const base = 0.02 + ps * ps * ps * 0.028;
+    const base = 0.02 + ps * ps * ps * 0.026;
     center(tCam + D, eyes.position);
     eyes.position.x += -ms.x * 6;
     eyes.position.y += -ms.y * 3 + Math.sin(time * 0.7) * 0.6;
     eyes.scale.setScalar(D * base * intro);
     eyes.lookAt(camera.position);
+    eyes.rotateY(ms.x * 0.4);                            // turn toward the cursor
+    eyes.rotateX(-ms.y * 0.28);
     blinkT -= dt;
-    if (blinkT <= 0) { blink = 1; blinkT = rand(2.5, 6.5); }
+    if (blinkT <= 0) { blink = 1; blinkT = rand(3, 7); }
     blink = Math.max(0, blink - dt * 4.5);
-    const lid = 1 - Math.sin(Math.min(1, (1 - blink)) * Math.PI) * (blink > 0 ? 0.94 : 0);
-    eyeMat.color.setRGB(0.62 + WEB.heart * 0.3, 0.015, 0.05 + WEB.heart * 0.04);
-    for (const e of eyeList) {
-      const dx = ms.x * 0.6, dy = ms.y * 0.6;
-      const len = Math.hypot(dx, dy, 1);
-      e.pupil.position.set((dx / len) * e.r * 0.8, (dy / len) * e.r * 0.8, (1 / len) * e.r * 0.85);
-      e.g.scale.y = blink > 0 ? Math.max(0.06, lid) : 1;
-    }
+    const lid = blink > 0 ? 1 - Math.sin((1 - blink) * Math.PI) * 0.92 : 1;
+    const glow = 0.82 + WEB.heart * 0.18;
+    eyeMat.color.setRGB(glow, glow, glow);
+    for (const e of eyeList) e.scale.y = Math.max(0.08, lid);
 
     /* post */
     renderer.toneMappingExposure = Math.max(1, WEB.bright);
     fxPass.uniforms.uTime.value = time;
-    fxPass.uniforms.uGlitch.value = WEB.glitch + (WEB.entered ? (1 - intro) * 1.4 : 0) + 0.02 * fxm;
+    fxPass.uniforms.uGlitch.value = WEB.glitch + (WEB.entered ? (1 - intro) * 0.5 : 0);
     fxPass.uniforms.uAber.value = 0.0012 * fxm + Math.min(Math.abs(vel) * 0.03, 0.006) + WEB.heart * 0.0018 * fxm;
     fxPass.uniforms.uNoise.value = 0.018 + 0.014 * fxm;
     fxPass.uniforms.uInvert.value = WEB.invert;
+    fxPass.uniforms.uSym.value = smoothstep01(ps, 0.2, 0.95) * (WEB.fx === 0 ? 0.4 : 1) * 0.7;
     bloom.strength = 0.75 + WEB.heart * 0.4 * fxm + ps * 0.1;
 
     composer.render();
