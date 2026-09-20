@@ -50,11 +50,23 @@
   /* ═══════════════════════════════════════════
      INTENSITY
   ═══════════════════════════════════════════ */
+  const FX_INFO = [
+    { name: 'CALM', tag: 'Clean & quiet', desc: 'Muted steel-blue web, solid panels, no glitch or flashing. Best for reading.' },
+    { name: 'SPIDER-SENSE', tag: 'Comic-book energy', desc: 'Spider-Verse style: vivid red & blue web, halftone print look, red spiders and a swinging camera.' },
+    { name: 'VENOM', tag: 'Black & white symbiote', desc: 'Monochrome and high-contrast. Black ink creeps in from the edges while huge white eyes watch you.' },
+  ];
+  let fxShown = false;
   function setFx(n) {
+    const changed = WEB.fx !== n;
     WEB.fx = n;
     body.dataset.fx = n;
     $$('[data-fx-btn]').forEach(b => b.classList.toggle('on', +b.dataset.fxBtn === n));
     $('#hud-fx').value = n;
+    const info = FX_INFO[n], d = $('#fx-desc');
+    if (d) d.innerHTML = `<b>${info.name}</b> — ${info.desc}`;
+    // after entering, announce the look change with a short title card so the switch is unmistakable
+    if (changed && WEB.entered && fxShown) { WEB.kick(0.5); titleCard('VISUAL STYLE', info.name, info.tag, 1500, { force: true }); }
+    fxShown = true;
   }
   $$('[data-fx-btn]').forEach(b => b.addEventListener('click', () => setFx(+b.dataset.fxBtn)));
   $('#hud-fx').addEventListener('change', e => setFx(+e.target.value));
@@ -192,14 +204,12 @@
     if (e.key === 'ArrowLeft') window.scrollBy({ top: -innerHeight * 0.8, behavior: 'smooth' });
   });
 
-  const STAGES = [[0.15, 'SPIDER-SENSE'], [0.4, 'TINGLING'], [0.7, 'BONDING'], [0.985, 'SYMBIOTE'], [2, 'VENOM']];
   const hudCh = $('#hud-ch'), hudPos = $('#hud-pos');
   function updateHud() {
     const p = WEB.p;
     seekFill.style.width = seekKnob.style.left = (p * 100).toFixed(2) + '%';
     seek.setAttribute('aria-valuenow', Math.round(p * 100));
-    const stage = STAGES.find(s => p < s[0])[1];
-    hudPos.textContent = `SYMBIOTE BOND ${String(Math.round(p * 100)).padStart(2, '0')}% · ${stage}`;
+    hudPos.textContent = `EXPLORED ${String(Math.round(p * 100)).padStart(2, '0')}%`;
   }
 
   /* ═══════════════════════════════════════════
@@ -413,7 +423,7 @@
       '> loading profile ............ <b>done</b>',
       '> user: VIPUL SHARMA // M.TECH CSE // IIIT UNA',
       '> spider-sense ............... <b>ACTIVE</b>',
-      '> symbiote bond .............. <b>0%</b>',
+      '> chapters .................... <b>10</b>',
     ];
     const log = $('#hero-log');
     let li = 0;

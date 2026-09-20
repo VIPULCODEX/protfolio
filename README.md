@@ -15,10 +15,15 @@
 **For everyone else (the fun part)**
 - **WebGL tunnel (three.js)** — a procedural web you fly through as you scroll, with chapter gates, wall-crawling spiders (red = Spider-Man, white = Venom), a spider that drops in front of you, and Venom's white eyes that follow your cursor
 - **Cinematic direction** — opening title sequence, letterbox bars, a title card at every chapter ("CHAPTER 05 — PROJECTS"), bokeh, anamorphic light streak, film colour grade, handheld camera drift, and end credits
-- **Symbiote takeover** — black ink creeps in from the frame edges as your "symbiote bond" rises (SPIDER-SENSE → TINGLING → BONDING → SYMBIOTE → VENOM)
+- **Three distinct visual styles** (pick on the entry screen, switch any time from the player bar — the whole site re-themes live):
+  | Style | Look |
+  |---|---|
+  | **Calm** | Muted steel-blue web, solid panels, fade-only reveals, no glitch or flashing — best for reading |
+  | **Spider-Sense** | Spider-Verse comic-print look: halftone dots, vivid red/blue, red spiders, swinging camera, pop-in reveals |
+  | **Venom** | Monochrome & high-contrast: black ink creeping in from the edges, huge watching eyes, white spiders, ink-drip reveals |
 - **Web-shooter** — click anywhere to fire a web
 - **Terminal** — a Terminal button in the nav and hero (or press `~`); try `help`, `whoami`, `projects`, `goto contact`
-- **Custom player HUD** — seek bar with chapter ticks, brightness, intensity (Calm / Spider-Sense / Venom), fullscreen, pause
+- **Custom player HUD** — seek bar with chapter ticks, brightness, visual style (Calm / Spider-Sense / Venom), fullscreen, pause
 - Draggable 3D skill orb, tilt/glare project cards, text scramble
 - No audio
 

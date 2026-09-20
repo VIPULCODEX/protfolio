@@ -64,7 +64,7 @@ function boot() {
       gl_Position = projectionMatrix * mv;
     }`;
   const webFS = /* glsl */`
-    uniform float uTime, uHeart;
+    uniform float uTime, uHeart, uWeb, uPulseK;
     uniform vec3 uA, uB;
     varying float vZ, vRnd, vFade;
     void main() {
@@ -72,7 +72,7 @@ function boot() {
       vec3 base = vec3(0.72, 0.78, 0.95);                         // silvery web silk
       vec3 energy = mix(uA, uB, clamp(vRnd, 0.0, 1.0));         // red / blue pulses running along it
       vec3 col = mix(base, energy, clamp(pulse * 1.2, 0.0, 1.0));
-      float a = vFade * (0.95 + pulse * 2.2 + uHeart * 0.4);
+      float a = vFade * (0.95 * uWeb + pulse * 2.2 * uPulseK + uHeart * 0.4);
       gl_FragColor = vec4(col * a, 1.0);
     }`;
   const ptVS = /* glsl */`
@@ -102,7 +102,7 @@ function boot() {
     }`;
 
   const uni = {
-    uTime: { value: 0 }, uHeart: { value: 0 },
+    uTime: { value: 0 }, uHeart: { value: 0 }, uWeb: { value: 1 }, uPulseK: { value: 1 },
     uA: { value: new THREE.Color(0xe62429) }, uB: { value: new THREE.Color(0x4c8dff) },
   };
 
@@ -324,12 +324,13 @@ function boot() {
   const NSP = lowPower ? 10 : 18;
   for (let i = 0; i < NSP; i++) {
     const s = makeSpider(rand(0.9, 2.3), i % 2 === 1);
-    const c = { g: s, t: i < 5 ? rand(20, 140) : rand(0, L), th: rand(0, Math.PI * 2), v: rand(1.5, 5) * (Math.random() < 0.5 ? 1 : -1), dth: rand(-0.06, 0.06), sp: rand(5, 11) };
+    const c = { g: s, venom: i % 2 === 1, t: i < 5 ? rand(20, 140) : rand(0, L), th: rand(0, Math.PI * 2), v: rand(1.5, 5) * (Math.random() < 0.5 ? 1 : -1), dth: rand(-0.06, 0.06), sp: rand(5, 11) };
     crawlers.push(c); scene.add(s);
   }
   const _v = new THREE.Vector3(), _t = new THREE.Vector3();
   function updateCrawlers(dt, time) {
     for (const c of crawlers) {
+      if (!c.g.visible) continue;
       c.t += c.v * dt; c.th += c.dth * dt;
       if (c.t < 2 || c.t > L - 2) c.v *= -1;
       const t = clamp(c.t, 0, L), n = { x: Math.cos(c.th), y: Math.sin(c.th) };
@@ -356,7 +357,7 @@ function boot() {
     const d = dropper;
     if (d.state === 0) {
       d.next -= dt;
-      if (d.next <= 0 && WEB.entered && WEB.fx > 0 && WEB.p > 0.03) {
+      if (d.next <= 0 && WEB.entered && WEB.fx === 2 && WEB.p > 0.03) {
         d.state = 1; d.t = 0;
         d.off.set(rand(-4, 4), 0, rand(9, 12));
         WEB.kick(0.5);
@@ -412,12 +413,12 @@ function boot() {
   const fxPass = new ShaderPass({
     uniforms: {
       tDiffuse: { value: null }, uTime: { value: 0 }, uGlitch: { value: 0 }, uAber: { value: 0.002 },
-      uNoise: { value: 0.05 }, uInvert: { value: 0 }, uSym: { value: 0 }, uRes: { value: new THREE.Vector2(innerWidth, innerHeight) },
+      uNoise: { value: 0.05 }, uInvert: { value: 0 }, uSym: { value: 0 }, uSat: { value: 1.2 }, uContrast: { value: 1.1 }, uHalftone: { value: 0 }, uRes: { value: new THREE.Vector2(innerWidth, innerHeight) },
     },
     vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: /* glsl */`
       uniform sampler2D tDiffuse;
-      uniform float uTime, uGlitch, uAber, uNoise, uInvert, uSym;
+      uniform float uTime, uGlitch, uAber, uNoise, uInvert, uSym, uSat, uContrast, uHalftone;
       uniform vec2 uRes;
       varying vec2 vUv;
       float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -442,16 +443,27 @@ function boot() {
 
         float ab = uAber + g * 0.025 + uGlitch * 0.004;
         vec3 col;
-        col.r = texture2D(tDiffuse, uv + c * ab * 1.2).r;
+        col.r = texture2D(tDiffuse, uv + c * ab * 1.2 + vec2(uHalftone * 0.0016, 0.0)).r;
         col.g = texture2D(tDiffuse, uv).g;
-        col.b = texture2D(tDiffuse, uv - c * ab * 1.2).b;
+        col.b = texture2D(tDiffuse, uv - c * ab * 1.2 - vec2(uHalftone * 0.0016, 0.0)).b;
 
         // scanlines + grain
         // film grade: gentle S-curve + a little extra saturation
         float luma = dot(col, vec3(0.299, 0.587, 0.114));
-        col = mix(vec3(luma), col, 1.22);
-        col = (col - 0.5) * 1.1 + 0.5;
+        col = mix(vec3(luma), col, uSat);
+        col = (col - 0.5) * uContrast + 0.5;
         col = max(col, 0.0);
+        // Spider-Verse style comic print: Ben-Day halftone dots in the shadows + a touch of poster banding
+        if (uHalftone > 0.001) {
+          float ang = 0.7854;
+          mat2 R = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));
+          vec2 cell = fract(R * (vUv * uRes) / (7.0 * uRes.y / 810.0)) - 0.5;
+          float l2 = dot(col, vec3(0.299, 0.587, 0.114));
+          float r = (1.0 - smoothstep(0.0, 0.75, l2)) * 0.62;
+          float m = smoothstep(r + 0.06, r - 0.06, length(cell));
+          col = mix(col, col * 0.4, uHalftone * m * (1.0 - l2));
+          col = mix(col, floor(col * 7.0 + 0.5) / 7.0, uHalftone * 0.35);
+        }
         col *= 0.95 + 0.05 * sin(uv.y * uRes.y * 1.6);
         col += (hash(uv * uRes + uTime) - 0.5) * uNoise;
 
@@ -478,11 +490,30 @@ function boot() {
     [0xffffff, 0x9aa4c0], [0xf5f7ff, 0xf5f7ff], [0xffffff, 0xffffff],
   ].map(([a, b]) => [new THREE.Color(a), new THREE.Color(b)]);
   const _ca = new THREE.Color(), _cb = new THREE.Color();
-  function palette(p) {
+  function palette(p, depth) {
     const f = clamp(p, 0, 0.9999) * (PAL.length - 1), i = Math.floor(f), k = f - i;
-    uni.uA.value.copy(_ca.copy(PAL[i][0]).lerp(PAL[i + 1][0], k));
-    uni.uB.value.copy(_cb.copy(PAL[i][1]).lerp(PAL[i + 1][1], k));
+    _ca.copy(PAL[i][0]).lerp(PAL[i + 1][0], k);
+    _cb.copy(PAL[i][1]).lerp(PAL[i + 1][1], k);
+    uni.uA.value.copy(look.A).lerp(_ca, depth);
+    uni.uB.value.copy(look.B).lerp(_cb, depth);
     gateMat.color.copy(uni.uA.value);
+  }
+
+  /* ─────────── LOOKS: Calm / Spider-Sense / Venom each get their own visual identity ─────────── */
+  const C = h => new THREE.Color(h);
+  const LOOKS = [
+    // 0 · CALM — clean, muted steel-blue, nothing flashing
+    { sat: 0.55, contrast: 1.0, bloom: 0.5, halftone: 0, grain: 0.012, inkBase: 0, inkMax: 0, bokeh: 0.3, eyes: 0, eyesLate: 0, eyeSize: 1, glow: 0.6, web: 0.8, pulse: 0.5, depth: 0, swing: 0.3, hand: 0.25, smooth: 1.5, aber: 0.0006, A: C(0x6f8fc7), B: C(0x9db4d9) },
+    // 1 · SPIDER-SENSE — comic-book energy: vivid red/blue, halftone print, dynamic swinging camera
+    { sat: 1.3, contrast: 1.1, bloom: 1.1, halftone: 0.6, grain: 0.03, inkBase: 0, inkMax: 0.55, bokeh: 1, eyes: 0.55, eyesLate: 1, eyeSize: 1, glow: 1, web: 1, pulse: 1.3, depth: 1, swing: 1.5, hand: 1, smooth: 1.9, aber: 0.0018, A: C(0xe62429), B: C(0x2b6cff) },
+    // 2 · VENOM — monochrome symbiote: crushed blacks, heavy ink from the start, big watching eyes
+    { sat: 0.06, contrast: 1.3, bloom: 0.9, halftone: 0, grain: 0.075, inkBase: 0.5, inkMax: 1.15, bokeh: 0.35, eyes: 1, eyesLate: 0, eyeSize: 1.35, glow: 0.3, web: 1.1, pulse: 0.8, depth: 0, swing: 0.7, hand: 1.4, smooth: 1.5, aber: 0.0025, A: C(0xffffff), B: C(0xaeb6c9) },
+  ];
+  const LOOK_KEYS = ['sat', 'contrast', 'bloom', 'halftone', 'grain', 'inkBase', 'inkMax', 'bokeh', 'eyes', 'eyesLate', 'eyeSize', 'glow', 'web', 'pulse', 'depth', 'swing', 'hand', 'smooth', 'aber'];
+  const look = Object.assign({}, LOOKS[1], { A: LOOKS[1].A.clone(), B: LOOKS[1].B.clone() });
+  function blendLook(target, k) {
+    for (const key of LOOK_KEYS) look[key] += (target[key] - look[key]) * k;
+    look.A.lerp(target.A, k); look.B.lerp(target.B, k);
   }
 
   /* ─────────── resize ─────────── */
@@ -511,10 +542,11 @@ function boot() {
     if (WEB.paused) dt = 0;
     time += dt;
     const fxm = clamp(WEB.fxMul(), 0.15, 2);
+    blendLook(LOOKS[WEB.fx], 1 - Math.exp(-Math.max(dt, 0.016) * 3.2));   // smooth cross-fade when the mode changes
 
     // smooth progress; `vel` is how hard you're falling
     const diff = WEB.p - ps;
-    ps += diff * (1 - Math.exp(-dt * 1.9));
+    ps += diff * (1 - Math.exp(-dt * look.smooth));
     const vel = clamp(diff, -0.2, 0.2);
     ms.x += (WEB.mouse.x - ms.x) * (1 - Math.exp(-dt * 4));
     ms.y += (WEB.mouse.y - ms.y) * (1 - Math.exp(-dt * 4));
@@ -545,24 +577,25 @@ function boot() {
     camera.lookAt(_c1);
     camera.rotateY(-ms.x * 0.24 * Math.min(fxm, 1.3));
     camera.rotateX(ms.y * 0.17 * Math.min(fxm, 1.3));
-    camera.rotateZ(-vel * 2.2 + Math.sin(time * 0.4) * 0.03 * fxm + (1 - intro) * 0.9);
+    camera.rotateZ(-vel * 2.2 * look.swing + Math.sin(time * 0.4) * 0.03 * look.swing + (1 - intro) * 0.9);
     camera.translateX(ms.x * 1.2);
     camera.translateY(Math.sin(time * 0.9) * 0.08 + WEB.heart * 0.05 * fxm);
     // subtle handheld: layered slow sines on rotation + a touch of positional drift
-    const hh = Math.min(fxm, 1.2);
+    const hh = look.hand;
     camera.rotateX((Math.sin(time * 1.3) + Math.sin(time * 2.9) * 0.5) * 0.0035 * hh);
     camera.rotateY((Math.sin(time * 1.1 + 1.7) + Math.sin(time * 3.3) * 0.5) * 0.0035 * hh);
     camera.translateX(Math.sin(time * 0.7) * 0.06 * hh);
     const shake = WEB.glitch * 0.06;
     if (shake > 0.002) camera.position.add(_e.set(rand(-shake, shake), rand(-shake, shake), 0));
-    camera.fov = 70 + Math.min(Math.abs(vel) * 260, 26) + WEB.heart * 2.5 * fxm + (1 - intro) * 65;
+    camera.fov = 70 + Math.min(Math.abs(vel) * 260 * look.swing, 26 * look.swing) + WEB.heart * 2.5 * fxm + (1 - intro) * 65;
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld();
 
     /* uniforms */
     uni.uTime.value = time;
     uni.uHeart.value = WEB.heart * Math.min(fxm, 1.5);
-    palette(ps);
+    palette(ps, look.depth);
+    uni.uWeb.value = look.web; uni.uPulseK.value = look.pulse;
     const scale = renderer.domElement.height / (2 * Math.tan((camera.fov * Math.PI) / 360));
     nodeUni.uScale.value = dustUni.uScale.value = scale;
     dustUni.uColor.value.copy(uni.uB.value).lerp(new THREE.Color(0xffffff), 0.6);
@@ -576,8 +609,10 @@ function boot() {
     farGlow.scale.set(gd * 0.75, gd * 0.75, 1);
     farStreak.scale.set(gd * 1.7, gd * 0.5, 1);
     glowMat.uniforms.uColor.value.copy(uni.uA.value).lerp(uni.uB.value, 0.35);
-    glowMat.uniforms.uI.value = (0.45 + WEB.heart * 0.25) * (1 - ps * 0.35);
+    glowMat.uniforms.uI.value = (0.45 + WEB.heart * 0.25) * (1 - ps * 0.35) * look.glow;
     bokehA.uScale.value = bokehB.uScale.value = scale;
+    bokehA.uColor.value.copy(uni.uA.value); bokehB.uColor.value.copy(uni.uB.value);
+    bokehA.uAlpha.value = bokehB.uAlpha.value = 0.13 * look.bokeh;
 
     /* gates spin & throb */
     gates.children.forEach(g => {
@@ -586,16 +621,20 @@ function boot() {
       g.scale.setScalar(1 + WEB.heart * 0.04);
     });
 
+    // spiders: none in Calm · red (Spider-Man) in Spider-Sense · white (Venom) in Venom
+    for (const c of crawlers) c.g.visible = WEB.fx === 1 ? !c.venom : WEB.fx === 2 ? c.venom : false;
     updateCrawlers(dt, time);
     updateDropper(dt, time);
 
     /* eyes — hover ahead of you, creeping closer the deeper you go */
     const D = 70 - ps * 46;
     const base = 0.02 + ps * ps * ps * 0.026;
+    const eyeVis = look.eyes * (1 - look.eyesLate + look.eyesLate * smoothstep01(ps, 0.55, 1));
     center(tCam + D, eyes.position);
     eyes.position.x += -ms.x * 6;
     eyes.position.y += -ms.y * 3 + Math.sin(time * 0.7) * 0.6;
-    eyes.scale.setScalar(D * base * intro);
+    eyes.visible = eyeVis > 0.03;
+    eyes.scale.setScalar(D * base * intro * eyeVis * look.eyeSize);
     eyes.lookAt(camera.position);
     eyes.rotateY(ms.x * 0.4);                            // turn toward the cursor
     eyes.rotateX(-ms.y * 0.28);
@@ -611,11 +650,14 @@ function boot() {
     renderer.toneMappingExposure = Math.max(1, WEB.bright);
     fxPass.uniforms.uTime.value = time;
     fxPass.uniforms.uGlitch.value = WEB.glitch + (WEB.entered ? (1 - intro) * 0.18 : 0);
-    fxPass.uniforms.uAber.value = 0.0012 * fxm + Math.min(Math.abs(vel) * 0.03, 0.006) + WEB.heart * 0.0018 * fxm;
-    fxPass.uniforms.uNoise.value = 0.018 + 0.014 * fxm;
+    fxPass.uniforms.uAber.value = look.aber + Math.min(Math.abs(vel) * 0.03, 0.006) * look.swing + WEB.heart * 0.0018 * fxm;
+    fxPass.uniforms.uNoise.value = look.grain + 0.008 * fxm;
+    fxPass.uniforms.uSat.value = look.sat;
+    fxPass.uniforms.uContrast.value = look.contrast;
+    fxPass.uniforms.uHalftone.value = look.halftone;
     fxPass.uniforms.uInvert.value = WEB.invert;
-    fxPass.uniforms.uSym.value = smoothstep01(ps, 0.2, 0.95) * (WEB.fx === 0 ? 0.4 : 1) * 0.7;
-    bloom.strength = 0.95 + WEB.heart * 0.35 * fxm + ps * 0.1;
+    fxPass.uniforms.uSym.value = (look.inkBase + smoothstep01(ps, 0.2, 0.95) * (look.inkMax - look.inkBase)) * 0.7;
+    bloom.strength = look.bloom + WEB.heart * 0.35 * fxm + ps * 0.1;
 
     composer.render();
   }
