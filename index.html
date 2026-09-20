@@ -4,11 +4,25 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Vipul Sharma | Enter the Web</title>
-  <meta name="description" content="Vipul Sharma – M.Tech CS student at IIIT Una. Web developer, ML engineer, cybersecurity enthusiast from Himachal Pradesh. An immersive Spider-Man × Venom themed portfolio."/>
+  <meta name="description" content="Vipul Sharma – Aspiring Data/AI Engineer. M.Tech CSE at IIIT Una, GATE CS 2025 (Top 5.5%). Databases, backend APIs, applied ML and GenAI. An immersive Spider-Man × Venom themed portfolio."/>
   <meta name="theme-color" content="#04050b"/>
   <meta property="og:title" content="Vipul Sharma | Enter the Web"/>
-  <meta property="og:description" content="Web developer · ML engineer · Cybersecurity. An immersive portfolio."/>
-  <meta property="og:image" content="https://vipulcodex.github.io/protfolio/profile.jpg"/>
+  <meta property="og:description" content="Aspiring Data/AI Engineer · Databases · Backend · ML. An immersive portfolio."/>
+  <meta property="og:image" content="https://vipulcodex.github.io/protfolio/assets/og.png"/>
+  <meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/>
+  <meta property="og:url" content="https://vipulcodex.github.io/protfolio/"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Vipul Sharma | Data / AI Engineer"/>
+  <meta name="twitter:image" content="https://vipulcodex.github.io/protfolio/assets/og.png"/>
+  <link rel="canonical" href="https://vipulcodex.github.io/protfolio/"/>
+  <link rel="modulepreload" href="js/scene.js"/>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Person","name":"Vipul Sharma","url":"https://vipulcodex.github.io/protfolio/",
+   "jobTitle":"Data / AI Engineer","email":"mailto:vipul26122004@gmail.com",
+   "alumniOf":[{"@type":"CollegeOrUniversity","name":"Indian Institute of Information Technology, Una"},{"@type":"CollegeOrUniversity","name":"Himachal Pradesh Technical University"}],
+   "sameAs":["https://github.com/VIPULCODEX","https://linkedin.com/in/vipul-s-302734228"]}
+  </script>
   <meta property="og:type" content="website"/>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🕷️%3C/text%3E%3C/svg%3E"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -37,6 +51,15 @@
 <div id="cur" aria-hidden="true"></div>
 <div id="cur-ring" aria-hidden="true"></div>
 <div id="ghost" aria-hidden="true"></div>
+<canvas id="webfx" aria-hidden="true"></canvas>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="term" hidden role="dialog" aria-label="Terminal">
+  <div class="term-box">
+    <div class="term-bar"><span>vipul@web:~</span><button id="term-close" type="button" aria-label="Close terminal">esc</button></div>
+    <div id="term-out" aria-live="polite"></div>
+    <form id="term-form" autocomplete="off"><span class="prompt">$</span><input id="term-in" spellcheck="false" autocapitalize="off" aria-label="Command"/></form>
+  </div>
+</div>
 <div id="dim" aria-hidden="true"></div>
 <div id="bright" aria-hidden="true"></div>
 
@@ -81,7 +104,9 @@
     </div>
 
     <button id="enter" class="enter-btn" type="button"><span>ENTER THE WEB</span></button>
-    <p class="gate-foot">Scroll to swing through. Use the controls at the bottom any time.</p>
+    <button id="quick" class="quick-btn" type="button">Skip the effects → Quick view</button>
+    <p id="gate-lowpower" class="gate-lowpower" hidden><i class="fas fa-bolt"></i> Low-power device detected — Quick view is recommended.</p>
+    <p class="gate-foot">Scroll to swing through. Controls sit at the bottom. Press <kbd>~</kbd> for a terminal.</p>
   </div>
 </div>
 
@@ -97,6 +122,10 @@
     <li><a href="#achievements">Achievements</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
+  <div class="nav-right">
+    <button id="mode-toggle" class="nav-btn" type="button" title="Switch between the 3D experience and a plain fast view">Quick view</button>
+    <a id="nav-cv" class="nav-btn primary" href="assets/Vipul_Sharma_CV.pdf" data-asset download><i class="fas fa-download"></i> Resume</a>
+  </div>
 </nav>
 
 <!-- ═════════ CONTENT ═════════ -->
@@ -108,12 +137,13 @@
       <div class="hero-copy">
         <p class="hero-tag reveal" style="--d:.1s">// M.TECH CSE · IIIT UNA · INDIA</p>
         <h2 class="hero-name glitch reveal" data-text="VIPUL SHARMA" style="--d:.25s">VIPUL SHARMA</h2>
-        <p class="hero-title reveal" style="--d:.45s"><span id="role">Web Developer</span><span class="caret">▍</span></p>
+        <p class="hero-title reveal" style="--d:.45s"><span id="role">Data / AI Engineer</span><span class="caret">▍</span></p>
         <p class="hero-bio reveal" style="--d:.6s">
-          Passionate technologist from the mountains of Himachal Pradesh. Currently pursuing M.Tech in Computer Science at IIIT Una, building systems that fuse web technology, machine learning, and security fundamentals into real-world impact.
+          Aspiring Data/AI Engineer with strong CS fundamentals in database design, SQL/NoSQL querying, backend API development, and applied machine learning / GenAI. Comfortable end-to-end, from data modeling to containerized deployment. GATE CS 2025 qualified (Top 5.5%) and a published researcher.
         </p>
         <div class="hero-socials reveal" style="--d:.75s">
-          <a href="https://github.com/VIPULCODEX" target="_blank" rel="noopener" class="btn btn-red" id="btn-github"><i class="fab fa-github"></i> GitHub</a>
+          <a href="assets/Vipul_Sharma_CV.pdf" data-asset download class="btn btn-red" id="btn-cv"><i class="fas fa-download"></i> Download CV</a>
+          <a href="https://github.com/VIPULCODEX" target="_blank" rel="noopener" class="btn btn-ghost" id="btn-github"><i class="fab fa-github"></i> GitHub</a>
           <a href="https://linkedin.com/in/vipul-s-302734228" target="_blank" rel="noopener" class="btn btn-ghost" id="btn-linkedin"><i class="fab fa-linkedin"></i> LinkedIn</a>
           <a href="mailto:vipul26122004@gmail.com" class="btn btn-ghost" id="btn-email"><i class="fas fa-envelope"></i> Email</a>
         </div>
@@ -124,9 +154,9 @@
         <div class="profile-glow"></div>
         <div class="profile-ring"></div>
         <div class="portrait-img">
-          <img src="profile.jpg" alt="Vipul Sharma" class="p-base"/>
-          <img src="profile.jpg" alt="" aria-hidden="true" class="p-r"/>
-          <img src="profile.jpg" alt="" aria-hidden="true" class="p-c"/>
+          <img src="assets/profile-crop.jpg" alt="Vipul Sharma" class="p-base"/>
+          <img src="assets/profile-crop.jpg" alt="" aria-hidden="true" class="p-r"/>
+          <img src="assets/profile-crop.jpg" alt="" aria-hidden="true" class="p-c"/>
         </div>
         <svg class="web-svg" viewBox="0 0 340 340" fill="none" aria-hidden="true">
           <g opacity="0.55" stroke="#e62429" stroke-width="0.8">
@@ -148,10 +178,10 @@
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-spider"></i><span class="scr">Network Stats</span></h2>
       <div class="stats">
-        <div class="stat-card panel tilt reveal" style="--d:.05s"><div class="stat-num" data-count="9" data-suffix="+">0</div><div class="stat-label">Projects Built</div></div>
-        <div class="stat-card panel tilt reveal" style="--d:.15s"><div class="stat-num" data-count="8" data-suffix="+">0</div><div class="stat-label">Certifications</div></div>
-        <div class="stat-card panel tilt reveal" style="--d:.25s"><div class="stat-num" data-count="1">0</div><div class="stat-label">Research Paper</div></div>
-        <div class="stat-card panel tilt reveal" style="--d:.35s"><div class="stat-num" data-count="8.16" data-dec="2">0</div><div class="stat-label">B.Tech CGPA</div></div>
+        <div class="stat-card panel tilt reveal" style="--d:.05s"><div class="stat-num" data-count="5.5" data-dec="1" data-prefix="Top " data-suffix="%">0</div><div class="stat-label">GATE CS 2025 · 1,70,000+ candidates</div></div>
+        <div class="stat-card panel tilt reveal" style="--d:.15s"><div class="stat-num" data-count="8.65" data-dec="2">0</div><div class="stat-label">M.Tech CGPA (current)</div></div>
+        <div class="stat-card panel tilt reveal" style="--d:.25s"><div class="stat-num" data-count="9" data-suffix="+">0</div><div class="stat-label">Projects Built</div></div>
+        <div class="stat-card panel tilt reveal" style="--d:.35s"><div class="stat-num" data-count="1">0</div><div class="stat-label">Research Paper</div></div>
       </div>
     </div>
   </section>
@@ -164,10 +194,10 @@
         <table>
           <thead><tr><th>Degree / Certificate</th><th>Institute / Board</th><th>Score</th><th>Year</th></tr></thead>
           <tbody>
-            <tr><td><strong>M.Tech, CSE</strong></td><td>Indian Institute of Information Technology, Una</td><td><span class="c-cyan">Ongoing</span></td><td>2025 – 2027</td></tr>
+            <tr><td><strong>M.Tech, CSE</strong></td><td>Indian Institute of Information Technology, Una</td><td><span class="c-cyan">8.65 CGPA · Current</span></td><td>2025 – 2027</td></tr>
             <tr><td><strong>B.Tech, CSE</strong></td><td>Himachal Pradesh Technical University (HPTU)</td><td><span class="c-red">8.16 CGPA</span></td><td>2021 – 2025</td></tr>
-            <tr><td><strong>Senior Secondary (XII)</strong></td><td>DAV Public Senior Secondary School, Greyoh</td><td>94.8%</td><td>2021</td></tr>
-            <tr><td><strong>Secondary (X)</strong></td><td>Govt. High School, Samirpur</td><td>92.4%</td><td>2019</td></tr>
+            <tr><td><strong>Senior Secondary (XII)</strong></td><td>CBSE Board · DAV Public Senior Secondary School, Greyoh</td><td>94.8%</td><td>2021</td></tr>
+            <tr><td><strong>Secondary (X)</strong></td><td>HP Board · Govt. High School, Samirpur</td><td>92.4%</td><td>2019</td></tr>
           </tbody>
         </table>
       </div>
@@ -178,19 +208,19 @@
   <section id="experience" data-name="DAY JOB">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-briefcase"></i><span class="scr">Experience</span></h2>
-      <div class="panel exp-card reveal">
-        <div class="exp-head">
-          <div>
-            <div class="exp-title">Freelance Documentation &amp; Content Support</div>
-            <div class="exp-subtitle">Independent Freelancer · Remote</div>
-          </div>
-          <div class="exp-date">2023 – Present</div>
-        </div>
-        <ul class="exp-items">
-          <li>Prepared resumes, CVs, reports, and structured documents for clients.</li>
-          <li>Assisted with content writing, formatting, and presentation of technical documents.</li>
-          <li>Contributed to field data collection and documentation for Himachal government-related work.</li>
-        </ul>
+      <div class="exp-list">
+      <div class="panel exp-card reveal" style="--d:0s">
+        <div class="exp-head"><div><div class="exp-title">Teaching Assistant</div><div class="exp-subtitle">IIIT Una</div></div><div class="exp-date">2026 – Present</div></div>
+        <ul class="exp-items"><li>Conduct hands-on lab practicals and evaluate coursework for <b>Network Security</b> and <b>Object-Oriented Programming (C++)</b>.</li><li>Support undergraduate students with implementation and debugging.</li></ul>
+      </div>
+      <div class="panel exp-card reveal" style="--d:0.1s">
+        <div class="exp-head"><div><div class="exp-title">Trainee</div><div class="exp-subtitle">Excellence Technology</div></div><div class="exp-date">Jan 2025 – May 2025</div></div>
+        <ul class="exp-items"><li>Contributed to development and support tasks as part of a hands-on technical training program.</li><li>Gained practical industry exposure alongside the MERN stack certification.</li></ul>
+      </div>
+      <div class="panel exp-card reveal" style="--d:0.2s">
+        <div class="exp-head"><div><div class="exp-title">Freelance &amp; Technical Contributions</div><div class="exp-subtitle">Independent · Remote</div></div><div class="exp-date">2023 – Present</div></div>
+        <ul class="exp-items"><li>Prepared technical reports and documentation.</li><li>Debugged and reviewed C/C++, Python, and web/database-driven projects to improve code correctness and reliability.</li></ul>
+      </div>
       </div>
     </div>
   </section>
@@ -199,16 +229,36 @@
   <section id="projects" data-name="MISSIONS">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-code"></i><span class="scr">Projects</span></h2>
+      <h3 class="sub-title reveal"><i class="fas fa-star"></i> Featured</h3>
+      <div class="featured-grid">
+        <article class="project-card panel tilt reveal featured"><span class="badge"><i class="fas fa-star"></i> Featured</span><div class="project-tag">// AI PLATFORM · CYBERSECURITY</div><h3 class="project-name">QUANTX AI</h3><p class="project-desc">AI-based cybersecurity intelligence platform that ingests and analyzes threat-intelligence data, structuring raw feeds into a queryable, analysis-ready form. Includes a real-time phishing-detection module that parses URL and page content on the fly with lightweight feature extraction for low-latency classification.</p><ul class="tech"><li>Python</li><li>Threat Intelligence</li><li>Phishing Detection</li><li>Feature Extraction</li></ul><div class="project-foot"><span class="project-date">2026</span><div class="project-links"><a href="https://github.com/VIPULCODEX/QUANTX" target="_blank" rel="noopener" class="plink" title="View source on GitHub"><i class="fab fa-github"></i> Code</a></div></div></article>
+        <article class="project-card panel tilt reveal featured"><span class="badge"><i class="fas fa-star"></i> Featured</span><div class="project-tag">// PYTHON · GRAPH ALGORITHMS</div><h3 class="project-name">VIPVISUALIZE</h3><p class="project-desc">Models kidney-exchange data as a compatibility graph (donor–patient pairs as nodes, compatibility as edges) and benchmarks matching algorithms, including a custom approach, to find optimal exchange cycles and chains. Interactive visualization deployed on Hugging Face.</p><ul class="tech"><li>Python</li><li>Graph Modeling</li><li>Matching Algorithms</li><li>Hugging Face</li></ul><div class="project-foot"><span class="project-date">2025 – 2026</span><div class="project-links"><a href="https://github.com/VIPULCODEX/VIPVISUALIZER" target="_blank" rel="noopener" class="plink" title="View source on GitHub"><i class="fab fa-github"></i> Code</a><a href="https://vipulcdex-visualizervp.hf.space/" target="_blank" rel="noopener" class="plink" title="Open live demo"><i class="fas fa-arrow-up-right-from-square"></i> Live demo</a></div></div></article>
+        <article class="project-card panel tilt reveal featured"><span class="badge"><i class="fas fa-star"></i> Featured</span><div class="project-tag">// B.TECH FINAL YEAR PROJECT · TEAM</div><h3 class="project-name">NORTH STARS</h3><p class="project-desc">Travel data platform for unexplored Dhauladhar routes and mountain temples. Normalized MongoDB schemas for places, routes and user data; aggregation-pipeline-driven APIs to filter, search and serve location/POI data efficiently; containerized with Docker.</p><ul class="tech"><li>MongoDB</li><li>Aggregation Pipelines</li><li>REST APIs</li><li>Docker</li></ul><div class="project-foot"><span class="project-date">Jan 2025 – Jun 2025</span><div class="project-links"><a href="https://github.com/VIPULCODEX?tab=repositories" target="_blank" rel="noopener" class="plink" title="Browse my repositories on GitHub"><i class="fab fa-github"></i> GitHub</a></div></div></article>
+      </div>
+      <div id="demo" class="panel demo reveal">
+        <div class="demo-head">
+          <div>
+            <div class="project-tag">// INTERACTIVE CONCEPT DEMO</div>
+            <h3 class="project-name">Kidney exchange, in one graph</h3>
+            <p class="project-desc">The idea behind VipVisualize. Each node is a donor–recipient pair; an arrow means <em>“this pair’s donor is compatible with that pair’s recipient”</em>. A closed cycle is a swap where everyone gets a kidney.</p>
+          </div>
+          <div class="demo-actions">
+            <button id="demo-shuffle" class="btn btn-ghost btn-sm" type="button"><i class="fas fa-shuffle"></i> New pool</button>
+            <button id="demo-find" class="btn btn-red btn-sm" type="button"><i class="fas fa-magnifying-glass"></i> Find an exchange</button>
+          </div>
+        </div>
+        <canvas id="demo-canvas" role="img" aria-label="Directed compatibility graph of donor-recipient pairs"></canvas>
+        <p id="demo-status" class="demo-status" aria-live="polite">Press “Find an exchange” to search for a cycle.</p>
+      </div>
+      <h3 class="sub-title reveal"><i class="fas fa-layer-group"></i> More projects</h3>
       <div class="projects-grid">
-        <article class="project-card panel tilt reveal"><div class="project-tag">// PERSONAL PROJECT</div><h3 class="project-name">FRET CONNECT</h3><p class="project-desc">A concept-driven social media platform for musicians, singers, and songwriters to collaborate, share work, and receive meaningful feedback.</p><div class="project-date">Jul 2025 – Present</div></article>
-        <article class="project-card panel tilt reveal"><div class="project-tag">// IIIT UNA PROJECT</div><h3 class="project-name">VIPVISUALIZE</h3><p class="project-desc">Graph visualizer representing compatibility relations between donor-recipient pairs for kidney exchange optimization using induced and acyclic matching algorithms.</p><div class="project-date">Feb 2026 – Mar 2026</div></article>
-        <article class="project-card panel tilt reveal"><div class="project-tag">// PERSONAL PROJECT</div><h3 class="project-name">RESUME-AI</h3><p class="project-desc">AI-assisted resume builder with ATS scoring and LaTeX-based resume generation. Designed to run fully locally without external API dependency.</p><div class="project-date">Jan 2026 – Mar 2026</div></article>
-        <article class="project-card panel tilt reveal"><div class="project-tag">// HPTU PROJECT</div><h3 class="project-name">NORTH STARS</h3><p class="project-desc">Travel guide web app for unexplored trekking routes and mountain temples in Dhauladhar. Features blogs, route guidance, local insights, and safe journey information.</p><div class="project-date">Jan 2025 – Jun 2025</div></article>
-        <article class="project-card panel tilt reveal"><div class="project-tag">// HPTU PROJECT</div><h3 class="project-name">VEDAGYA</h3><p class="project-desc">Mobile application built with Kotlin and Jetpack libraries that aggregates technology news, trends, and blogs into a single unified platform.</p><div class="project-date">Jul 2024 – Oct 2024</div></article>
-        <article class="project-card panel tilt reveal"><div class="project-tag">// ML PROJECT · HPTU</div><h3 class="project-name">ALZHEIMER PREDICTION SYSTEM</h3><p class="project-desc">Machine learning model using regression and decision tree techniques for early Alzheimer's prediction, processing medical data to identify risk patterns.</p><div class="project-date">Aug 2024 – Nov 2024</div></article>
-        <article class="project-card panel tilt reveal"><div class="project-tag">// SIMULATION · HPTU</div><h3 class="project-name">TRAFFIC SIMULATION SYSTEM</h3><p class="project-desc">Simulates real-world traffic flow, vehicle movement, signals, and congestion in a controlled environment to demonstrate traffic behavior and management strategies.</p><div class="project-date">Feb 2024 – May 2024</div></article>
-        <article class="project-card panel tilt reveal"><div class="project-tag">// WEB APP · HPTU</div><h3 class="project-name">PG LIFE</h3><p class="project-desc">Web application to help users find PGs and rooms in nearby localities with accommodation details, amenities listings, and accessibility information.</p><div class="project-date">Jul 2023 – Nov 2023</div></article>
-        <article class="project-card panel tilt reveal"><div class="project-tag">// EARLY PROJECTS</div><h3 class="project-name">KBC GAME &amp; HANGMAN</h3><p class="project-desc">C++ quiz game inspired by Kaun Banega Crorepati and a Python-based Hangman game, developed during school-level programming practice.</p><div class="project-date">2020 – 2022</div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// PERSONAL PROJECT</div><h3 class="project-name">RESUME-AI</h3><p class="project-desc">AI-assisted resume builder with ATS scoring and LaTeX-based resume generation. Designed to run fully locally without external API dependency.</p><ul class="tech"><li>AI</li><li>LaTeX</li><li>ATS Scoring</li><li>Runs Locally</li></ul><div class="project-foot"><span class="project-date">Jan 2026 – Mar 2026</span><div class="project-links"><a href="https://github.com/VIPULCODEX/resume-ai" target="_blank" rel="noopener" class="plink" title="View source on GitHub"><i class="fab fa-github"></i> Code</a></div></div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// PERSONAL PROJECT</div><h3 class="project-name">FRET CONNECT</h3><p class="project-desc">A concept-driven social media platform for musicians, singers, and songwriters to collaborate, share work, and receive meaningful feedback.</p><ul class="tech"><li>Social Platform</li><li>Web App</li><li>Community</li></ul><div class="project-foot"><span class="project-date">Jul 2025 – Present</span><div class="project-links"><a href="https://github.com/VIPULCODEX?tab=repositories" target="_blank" rel="noopener" class="plink" title="Browse my repositories on GitHub"><i class="fab fa-github"></i> GitHub</a></div></div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// HPTU PROJECT</div><h3 class="project-name">VEDAGYA</h3><p class="project-desc">Mobile application built with Kotlin and Jetpack libraries that aggregates technology news, trends, and blogs into a single unified platform.</p><ul class="tech"><li>Kotlin</li><li>Jetpack</li><li>Android</li></ul><div class="project-foot"><span class="project-date">Jul 2024 – Oct 2024</span><div class="project-links"><a href="https://github.com/VIPULCODEX?tab=repositories" target="_blank" rel="noopener" class="plink" title="Browse my repositories on GitHub"><i class="fab fa-github"></i> GitHub</a></div></div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// ML PROJECT · HPTU</div><h3 class="project-name">ALZHEIMER PREDICTION SYSTEM</h3><p class="project-desc">Machine learning model using regression and decision tree techniques for early Alzheimer's prediction, processing medical data to identify risk patterns.</p><ul class="tech"><li>Python</li><li>Machine Learning</li><li>Regression</li><li>Decision Trees</li></ul><div class="project-foot"><span class="project-date">Aug 2024 – Nov 2024</span><div class="project-links"><a href="https://github.com/VIPULCODEX?tab=repositories" target="_blank" rel="noopener" class="plink" title="Browse my repositories on GitHub"><i class="fab fa-github"></i> GitHub</a></div></div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// SIMULATION · HPTU</div><h3 class="project-name">TRAFFIC SIMULATION SYSTEM</h3><p class="project-desc">Simulates real-world traffic flow, vehicle movement, signals, and congestion in a controlled environment to demonstrate traffic behavior and management strategies.</p><ul class="tech"><li>Python</li><li>Simulation</li><li>Traffic Flow</li></ul><div class="project-foot"><span class="project-date">Feb 2024 – May 2024</span><div class="project-links"><a href="https://github.com/VIPULCODEX/TRAFFIC_SIMULATION" target="_blank" rel="noopener" class="plink" title="View source on GitHub"><i class="fab fa-github"></i> Code</a></div></div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// WEB APP · HPTU</div><h3 class="project-name">PG LIFE</h3><p class="project-desc">Web application to help users find PGs and rooms in nearby localities with accommodation details, amenities listings, and accessibility information.</p><ul class="tech"><li>Web App</li><li>Listings</li></ul><div class="project-foot"><span class="project-date">Jul 2023 – Nov 2023</span><div class="project-links"><a href="https://github.com/VIPULCODEX?tab=repositories" target="_blank" rel="noopener" class="plink" title="Browse my repositories on GitHub"><i class="fab fa-github"></i> GitHub</a></div></div></article>
+        <article class="project-card panel tilt reveal"><div class="project-tag">// EARLY PROJECTS</div><h3 class="project-name">KBC GAME &amp; HANGMAN</h3><p class="project-desc">C++ quiz game inspired by Kaun Banega Crorepati and a Python-based Hangman game, developed during school-level programming practice.</p><ul class="tech"><li>C++</li><li>Python</li></ul><div class="project-foot"><span class="project-date">2020 – 2022</span><div class="project-links"><a href="https://github.com/VIPULCODEX/HANGMAN-GAME" target="_blank" rel="noopener" class="plink" title="View source on GitHub"><i class="fab fa-github"></i> Code</a></div></div></article>
       </div>
     </div>
   </section>
@@ -220,10 +270,11 @@
       <p class="hint reveal">// drag the orb to explore</p>
       <div id="sphere" class="reveal" aria-hidden="true"></div>
       <div class="skills-grid">
-        <div class="skill-group panel reveal"><div class="skill-group-title"><i class="fas fa-code"></i>Languages</div><div class="skill-tags"><span class="skill-tag">C</span><span class="skill-tag">C++</span><span class="skill-tag">Python</span><span class="skill-tag">JavaScript</span><span class="skill-tag">Kotlin</span></div></div>
-        <div class="skill-group panel reveal" style="--d:.1s"><div class="skill-group-title"><i class="fas fa-globe"></i>Web Development</div><div class="skill-tags"><span class="skill-tag">HTML</span><span class="skill-tag">CSS</span><span class="skill-tag">React.js</span><span class="skill-tag">Node.js</span><span class="skill-tag">MongoDB</span><span class="skill-tag">Flask</span></div></div>
-        <div class="skill-group panel reveal" style="--d:.2s"><div class="skill-group-title"><i class="fas fa-shield-halved"></i>Cybersecurity</div><div class="skill-tags"><span class="skill-tag">Security Fundamentals</span><span class="skill-tag">Threat Analysis</span><span class="skill-tag">Ethical Hacking</span></div></div>
-        <div class="skill-group panel reveal" style="--d:.3s"><div class="skill-group-title"><i class="fas fa-tools"></i>Tools &amp; Platforms</div><div class="skill-tags"><span class="skill-tag">Git</span><span class="skill-tag">GitHub</span><span class="skill-tag">VS Code</span><span class="skill-tag">PyArmor</span><span class="skill-tag">Jetpack</span><span class="skill-tag">Blender</span></div></div>
+        <div class="skill-group panel reveal" style="--d:0s"><div class="skill-group-title"><i class="fas fa-database"></i>Languages &amp; Databases</div><div class="skill-tags"><span class="skill-tag">Python</span><span class="skill-tag">SQL</span><span class="skill-tag">C++</span><span class="skill-tag">JavaScript</span><span class="skill-tag">MySQL</span><span class="skill-tag">PostgreSQL</span><span class="skill-tag">MongoDB</span></div></div>
+        <div class="skill-group panel reveal" style="--d:0.08s"><div class="skill-group-title"><i class="fas fa-server"></i>Data &amp; Backend</div><div class="skill-tags"><span class="skill-tag">REST API Design</span><span class="skill-tag">Data Modeling</span><span class="skill-tag">Data Validation &amp; Processing</span><span class="skill-tag">Graph Modeling</span><span class="skill-tag">Node.js</span><span class="skill-tag">Express.js</span></div></div>
+        <div class="skill-group panel reveal" style="--d:0.16s"><div class="skill-group-title"><i class="fas fa-brain"></i>Machine Learning &amp; AI</div><div class="skill-tags"><span class="skill-tag">NumPy</span><span class="skill-tag">Pandas</span><span class="skill-tag">Scikit-learn</span><span class="skill-tag">Applied ML</span><span class="skill-tag">Algorithm Design</span><span class="skill-tag">Data Analysis</span><span class="skill-tag">GenAI Fundamentals</span><span class="skill-tag">Prompt Engineering</span><span class="skill-tag">LLM Basics</span></div></div>
+        <div class="skill-group panel reveal" style="--d:0.24s"><div class="skill-group-title"><i class="fas fa-shield-halved"></i>Cybersecurity</div><div class="skill-tags"><span class="skill-tag">Security Fundamentals</span><span class="skill-tag">Threat Analysis</span><span class="skill-tag">Phishing Detection</span><span class="skill-tag">Network Security</span></div></div>
+        <div class="skill-group panel reveal" style="--d:0.32s"><div class="skill-group-title"><i class="fas fa-tools"></i>Tools &amp; Foundations</div><div class="skill-tags"><span class="skill-tag">Docker</span><span class="skill-tag">Git</span><span class="skill-tag">Linux</span><span class="skill-tag">VS Code</span><span class="skill-tag">DBMS</span><span class="skill-tag">DSA</span><span class="skill-tag">Operating Systems</span><span class="skill-tag">Computer Architecture</span><span class="skill-tag">Compiler Design</span><span class="skill-tag">Computer Networks</span></div></div>
       </div>
     </div>
   </section>
@@ -232,15 +283,16 @@
   <section id="certifications" data-name="CERTIFICATIONS">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-certificate"></i><span class="scr">Certifications</span></h2>
+      <p class="hint reveal">// click any certificate to view it on LinkedIn</p>
       <div class="certs-grid">
-        <div class="cert-card panel reveal"><div class="cert-icon"><i class="fas fa-layer-group"></i></div><div><div class="cert-name">MERN Stack Development</div><div class="cert-org">Excellence Technology · May 2025</div></div></div>
-        <div class="cert-card panel reveal" style="--d:.06s"><div class="cert-icon"><i class="fab fa-android"></i></div><div><div class="cert-name">Android Development</div><div class="cert-org">Internshala · Sep 2024</div></div></div>
-        <div class="cert-card panel reveal" style="--d:.12s"><div class="cert-icon"><i class="fas fa-mobile-screen"></i></div><div><div class="cert-name">Android App Development</div><div class="cert-org">NSDC · Sep 2024</div></div></div>
-        <div class="cert-card panel reveal" style="--d:.18s"><div class="cert-icon"><i class="fas fa-lock"></i></div><div><div class="cert-name">IBM Cyber Security</div><div class="cert-org">IBM · Jun 2024</div></div></div>
-        <div class="cert-card panel reveal" style="--d:.24s"><div class="cert-icon"><i class="fas fa-code"></i></div><div><div class="cert-name">Web Development</div><div class="cert-org">Internshala · Oct 2023</div></div></div>
-        <div class="cert-card panel reveal" style="--d:.3s"><div class="cert-icon"><i class="fas fa-cube"></i></div><div><div class="cert-name">Computer Graphics</div><div class="cert-org">NPTEL · Oct 2022</div></div></div>
-        <div class="cert-card panel reveal" style="--d:.36s"><div class="cert-icon"><i class="fas fa-robot"></i></div><div><div class="cert-name">Generative AI Workshop</div><div class="cert-org">LinkedIn · Jun 2024</div></div></div>
-        <div class="cert-card panel reveal" style="--d:.42s"><div class="cert-icon"><i class="fas fa-brain"></i></div><div><div class="cert-name">Ethics in Generative AI</div><div class="cert-org">LinkedIn · Jun 2024</div></div></div>
+        <a class="cert-card panel reveal" style="--d:0.00s" href="https://www.linkedin.com/in/vipul-s-302734228/details/certifications/" target="_blank" rel="noopener" title="View on LinkedIn"><div class="cert-icon"><i class="fas fa-layer-group"></i></div><div class="cert-text"><div class="cert-name">MERN Stack Development</div><div class="cert-org">Excellence Technology · May 2025</div></div><i class="fab fa-linkedin cert-go" aria-hidden="true"></i></a>
+        <a class="cert-card panel reveal" style="--d:0.06s" href="https://www.linkedin.com/in/vipul-s-302734228/details/certifications/" target="_blank" rel="noopener" title="View on LinkedIn"><div class="cert-icon"><i class="fab fa-android"></i></div><div class="cert-text"><div class="cert-name">Android Development</div><div class="cert-org">Internshala · Sep 2024</div></div><i class="fab fa-linkedin cert-go" aria-hidden="true"></i></a>
+        <a class="cert-card panel reveal" style="--d:0.12s" href="https://www.linkedin.com/in/vipul-s-302734228/details/certifications/" target="_blank" rel="noopener" title="View on LinkedIn"><div class="cert-icon"><i class="fas fa-mobile-screen"></i></div><div class="cert-text"><div class="cert-name">Android App Development</div><div class="cert-org">NSDC · Sep 2024</div></div><i class="fab fa-linkedin cert-go" aria-hidden="true"></i></a>
+        <a class="cert-card panel reveal" style="--d:0.18s" href="https://www.linkedin.com/in/vipul-s-302734228/details/certifications/" target="_blank" rel="noopener" title="View on LinkedIn"><div class="cert-icon"><i class="fas fa-lock"></i></div><div class="cert-text"><div class="cert-name">IBM Cyber Security Fundamentals</div><div class="cert-org">IBM · Jun 2024</div></div><i class="fab fa-linkedin cert-go" aria-hidden="true"></i></a>
+        <a class="cert-card panel reveal" style="--d:0.24s" href="https://www.linkedin.com/in/vipul-s-302734228/details/certifications/" target="_blank" rel="noopener" title="View on LinkedIn"><div class="cert-icon"><i class="fas fa-code"></i></div><div class="cert-text"><div class="cert-name">Web Development</div><div class="cert-org">Internshala · Oct 2023</div></div><i class="fab fa-linkedin cert-go" aria-hidden="true"></i></a>
+        <a class="cert-card panel reveal" style="--d:0.30s" href="https://www.linkedin.com/in/vipul-s-302734228/details/certifications/" target="_blank" rel="noopener" title="View on LinkedIn"><div class="cert-icon"><i class="fas fa-cube"></i></div><div class="cert-text"><div class="cert-name">Computer Graphics (Elite / Topper)</div><div class="cert-org">NPTEL · Oct 2022</div></div><i class="fab fa-linkedin cert-go" aria-hidden="true"></i></a>
+        <a class="cert-card panel reveal" style="--d:0.36s" href="https://www.linkedin.com/in/vipul-s-302734228/details/certifications/" target="_blank" rel="noopener" title="View on LinkedIn"><div class="cert-icon"><i class="fas fa-robot"></i></div><div class="cert-text"><div class="cert-name">Generative AI Workshop</div><div class="cert-org">LinkedIn Learning · Jun 2024</div></div><i class="fab fa-linkedin cert-go" aria-hidden="true"></i></a>
+        <a class="cert-card panel reveal" style="--d:0.42s" href="https://www.linkedin.com/in/vipul-s-302734228/details/certifications/" target="_blank" rel="noopener" title="View on LinkedIn"><div class="cert-icon"><i class="fas fa-brain"></i></div><div class="cert-text"><div class="cert-name">Ethics in Generative AI</div><div class="cert-org">LinkedIn Learning · Jun 2024</div></div><i class="fab fa-linkedin cert-go" aria-hidden="true"></i></a>
       </div>
     </div>
   </section>
@@ -266,8 +318,8 @@
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-trophy"></i><span class="scr">Achievements</span></h2>
       <div class="achieve-grid">
-        <div class="achieve-card panel tilt reveal"><div class="achieve-icon"><i class="fas fa-award"></i></div><div class="achieve-title">GATE CS 2025 Qualified</div><div class="achieve-sub">Computer Science &amp; Engineering</div></div>
-        <div class="achieve-card panel tilt reveal" style="--d:.1s"><div class="achieve-icon"><i class="fas fa-users"></i></div><div class="achieve-title">Club Head &amp; Active Member</div><div class="achieve-sub">HPTU College Activities</div></div>
+        <div class="achieve-card panel tilt reveal"><div class="achieve-icon"><i class="fas fa-award"></i></div><div class="achieve-title">GATE CS 2025 · Top 5.5%</div><div class="achieve-sub">Among 1,70,000+ candidates</div></div>
+        <div class="achieve-card panel tilt reveal" style="--d:.1s"><div class="achieve-icon"><i class="fas fa-users"></i></div><div class="achieve-title">Head, Event Management Team</div><div class="achieve-sub">Position Holder, Technical &amp; Cultural Clubs · 2021–2025</div></div>
         <div class="achieve-card panel tilt reveal" style="--d:.2s"><div class="achieve-icon"><i class="fas fa-baseball-bat-ball"></i></div><div class="achieve-title">Sports &amp; Leadership</div><div class="achieve-sub">Cricket, Badminton &amp; Events Management</div></div>
         <div class="achieve-card panel tilt reveal" style="--d:.3s"><div class="achieve-icon"><i class="fas fa-star"></i></div><div class="achieve-title">School Achievements</div><div class="achieve-sub">Maths Olympiad Winner · Debate Winner</div></div>
       </div>
@@ -286,6 +338,17 @@
         <a href="https://github.com/VIPULCODEX" target="_blank" rel="noopener" class="btn btn-ghost btn-lg"><i class="fab fa-github"></i> GitHub</a>
         <a href="tel:+918628997357" class="btn btn-ghost btn-lg"><i class="fas fa-phone"></i> +91-8628997357</a>
       </div>
+      <div class="finale-mini reveal">
+        <button id="copy-email" class="btn btn-ghost btn-sm" type="button"><i class="fas fa-copy"></i> Copy email</button>
+        <a href="assets/Vipul_Sharma_CV.pdf" data-asset download class="btn btn-ghost btn-sm"><i class="fas fa-download"></i> Download CV</a>
+      </div>
+      <form id="contact-form" class="panel contact-form reveal" autocomplete="off">
+        <h3 class="project-name">Send a quick note</h3>
+        <label>Your name<input id="cf-name" required maxlength="80" placeholder="Jane Doe"/></label>
+        <label>Message<textarea id="cf-msg" required rows="4" maxlength="800" placeholder="Hi Vipul, we have an opening for…"></textarea></label>
+        <button class="btn btn-red" type="submit"><i class="fas fa-paper-plane"></i> Open in my email app</button>
+        <p class="form-note">This opens your email client with the message ready to send. Nothing is stored.</p>
+      </form>
       <button id="wake" class="wake-btn reveal" type="button"><i class="fas fa-arrow-up"></i> back to the top</button>
       <p class="finale-foot reveal">Designed &amp; built by <span>Vipul Sharma</span> · Himachal Pradesh, India<br/>
         <small>Tip: try typing <code>hire</code> on your keyboard.</small></p>
@@ -312,6 +375,7 @@
     <select id="hud-fx" class="hud-select" aria-label="Intensity">
       <option value="0">CALM</option><option value="1" selected>SPIDER-SENSE</option><option value="2">VENOM</option>
     </select>
+    <button id="hud-term" class="hud-btn" type="button" title="Terminal (~)" aria-label="Open terminal"><i class="fas fa-terminal"></i></button>
     <button id="hud-fs" class="hud-btn" type="button" title="Fullscreen (F)" aria-label="Fullscreen"><i class="fas fa-expand"></i></button>
   </div>
 </div>

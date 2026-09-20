@@ -25,6 +25,7 @@
     glitch: 0,                // glitch burst 0..1 (decays)
     invert: 0,
     bright: 1,
+    quick: false,             // plain fast view: no WebGL, no effects
     mouse: { x: 0, y: 0 },
     chapters: [],             // [{ p, name }]
     chapter: 0,
@@ -63,24 +64,46 @@
      GATE → ENTER
   ═══════════════════════════════════════════ */
   const gate = $('#gate');
-  $('#enter').addEventListener('click', () => {
+  function enterSite(quick) {
     if (WEB.entered) return;
     WEB.entered = true;
-    if ($('#opt-fs').checked) toggleFullscreen(true);
+    if (!quick && $('#opt-fs').checked) toggleFullscreen(true);
 
     body.classList.remove('locked');
     body.classList.add('entered');
     gate.classList.add('gone');
-    WEB.kick(0.9); flash('white', 120);
     window.scrollTo(0, 0);
+    setQuick(quick);
     measure();
-    startReveals();
+    if (!quick) { WEB.kick(0.9); flash('white', 120); startReveals(); }
     typeLog();
     startRoles();
     beatAt = clock + 800;
     nextWhisper = clock + 12000;
-    
-  });
+  }
+  $('#enter').addEventListener('click', () => enterSite(false));
+  $('#quick').addEventListener('click', () => enterSite(true));
+
+  // quick view: plain, fast, effect-free. Toggleable any time from the nav.
+  function setQuick(on) {
+    WEB.quick = on;
+    body.classList.toggle('quick', on);
+    const t = $('#mode-toggle');
+    t.textContent = on ? 'Immersive view' : 'Quick view';
+    if (on) {
+      $$('.reveal').forEach(el => el.classList.add('in'));
+      $$('[data-count]').forEach(el => { el.textContent = (el.dataset.prefix || '') + (+el.dataset.count).toFixed(+(el.dataset.dec || 0)) + (el.dataset.suffix || ''); });
+      whisperEl.classList.remove('on');
+    } else if (WEB.entered) {
+      WEB.kick(0.6);
+    }
+  }
+  $('#mode-toggle').addEventListener('click', () => setQuick(!WEB.quick));
+
+  // suggest quick view on weak hardware / data-saver, and allow ?quick deep-links
+  const lowEnd = (navigator.hardwareConcurrency || 8) <= 2 || (navigator.deviceMemory || 8) <= 2 || (navigator.connection && navigator.connection.saveData);
+  if (lowEnd) { $('#gate-lowpower').hidden = false; $('#quick').classList.add('rec'); }
+  if (new URLSearchParams(location.search).has('quick')) setTimeout(() => enterSite(true), 0);
 
   /* ═══════════════════════════════════════════
      PLAYER HUD
@@ -104,6 +127,7 @@
     } catch (e) { /* fullscreen denied — fine */ }
   }
   hudFs.addEventListener('click', () => toggleFullscreen());
+  $('#hud-term').addEventListener('click', () => toggleTerm());
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev =>
     document.addEventListener(ev, () => {
       const on = document.fullscreenElement || document.webkitFullscreenElement;
@@ -112,9 +136,11 @@
 
   window.addEventListener('keydown', e => {
     const tag = (e.target.tagName || '').toLowerCase();
-    if (tag === 'input' && e.target.type !== 'range') return;
+    if (e.key === 'Escape' && !termEl.hidden) { closeTerm(); return; }
+    if ((tag === 'input' && e.target.type !== 'range') || tag === 'textarea') return;
     if (!WEB.entered) return;
     const k = e.key.toLowerCase();
+    if (e.key === '`' || e.key === '~') { e.preventDefault(); toggleTerm(); return; }
     if (k === ' ' && tag !== 'button' && tag !== 'a' && tag !== 'select') { e.preventDefault(); setPaused(!WEB.paused); }
     else if (k === 'f') toggleFullscreen();
     else if (k === '+' || k === '=') setBright(WEB.bright * 100 + 5);
@@ -315,13 +341,13 @@
     // cursor is always smooth, even when effects are paused
     m.rx += (m.x - m.rx) * 0.2; m.ry += (m.y - m.ry) * 0.2;
     ring.style.transform = `translate(${m.rx}px,${m.ry}px)`;
-    if (WEB.entered && WEB.fx > 0) {
+    if (WEB.entered && WEB.fx > 0 && !WEB.quick) {
       m.gx += ((innerWidth - m.x) - m.gx) * 0.045;
       m.gy += ((innerHeight - m.y) - m.gy) * 0.045;
       ghost.style.transform = `translate(${m.gx}px,${m.gy}px)`;
     }
 
-    if (WEB.paused) return;
+    if (WEB.paused || WEB.quick) return;
     clock += dt * 1000;
     WEB.heart *= Math.exp(-dt * 6);
     WEB.glitch *= Math.exp(-dt * 3.5);
@@ -376,11 +402,11 @@
   $$('.scr').forEach(el => el.addEventListener('mouseenter', () => scramble(el)));
 
   function countUp(el) {
-    const to = +el.dataset.count, dec = +(el.dataset.dec || 0), suf = el.dataset.suffix || '';
+    const to = +el.dataset.count, dec = +(el.dataset.dec || 0), suf = el.dataset.suffix || '', pre = el.dataset.prefix || '';
     const dur = 1600, t0 = performance.now();
     (function step(t) {
       const k = clamp((t - t0) / dur, 0, 1), e = 1 - Math.pow(1 - k, 3);
-      el.textContent = (to * e).toFixed(dec) + (k >= 1 ? suf : '');
+      el.textContent = pre + (to * e).toFixed(dec) + (k >= 1 ? suf : '');
       if (k < 1) requestAnimationFrame(step);
     })(t0);
   }
@@ -403,7 +429,7 @@
 
   /* hero: role rotator + terminal log */
   function startRoles() {
-    const roles = ['Web Developer', 'ML Engineer', 'Cybersecurity Enthusiast', 'GATE CS 2025 Qualified', 'M.Tech @ IIIT Una'];
+    const roles = ['Data / AI Engineer', 'Backend & Databases', 'Applied ML & GenAI', 'GATE CS 2025 · Top 5.5%', 'M.Tech @ IIIT Una'];
     const el = $('#role');
     let ri = 0, ci = roles[0].length, del = true;
     (function loop() {
@@ -444,6 +470,7 @@
     $$('.tilt').forEach(el => {
       if (el.classList.contains('project-card')) el.insertAdjacentHTML('afterbegin', '<div class="glare"></div>');
       el.addEventListener('pointermove', e => {
+        if (WEB.quick) return;
         const r = el.getBoundingClientRect();
         const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
         el.style.transform = `perspective(900px) rotateX(${(0.5 - y) * 12}deg) rotateY(${(x - 0.5) * 14}deg) translateZ(10px)`;
@@ -489,7 +516,7 @@
         ay += ((hover ? 0.006 : 0.0035) * Math.sign(ay || 1) - ay) * 0.03;
         ax += (0.0012 - ax) * 0.03;
       }
-      const R = Math.min(host.clientWidth, host.clientHeight) * 0.42;
+      const R = Math.min(host.clientWidth, host.clientHeight) * 0.46;
       const cy = Math.cos(ay), sy = Math.sin(ay), cx = Math.cos(ax), sx = Math.sin(ax);
       for (const p of pts) {
         let x = p.x * cy - p.z * sy, z = p.x * sy + p.z * cy;
@@ -497,10 +524,306 @@
         const inv = 1 / Math.hypot(x, y, z);
         p.x = x = x * inv; p.y = y = y * inv; p.z = z = z * inv;
         const s = 0.62 + (z + 1) * 0.28;
-        p.el.style.transform = `translate(-50%,-50%) translate(${(x * R * 1.55).toFixed(1)}px,${(y * R).toFixed(1)}px) scale(${s.toFixed(3)})`;
+        p.el.style.transform = `translate(-50%,-50%) translate(${(x * R * 1.7).toFixed(1)}px,${(y * R).toFixed(1)}px) scale(${s.toFixed(3)})`;
         p.el.style.opacity = (0.22 + (z + 1) * 0.39).toFixed(2);
         p.el.style.zIndex = Math.round((z + 1) * 50);
       }
     })();
+  })();
+
+  /* ═══════════════════════════════════════════
+     TOAST · PLACEHOLDER LINKS · CV DOWNLOAD
+  ═══════════════════════════════════════════ */
+  const toastEl = $('#toast');
+  let toastT = 0;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => toastEl.classList.remove('on'), 2600);
+  }
+  WEB.toast = toast;
+
+  document.addEventListener('click', e => {
+    const todo = e.target.closest('a[data-todo]');
+    if (todo) { e.preventDefault(); toast('Link coming soon'); return; }
+    const asset = e.target.closest('a[data-asset]');
+    if (asset) {
+      e.preventDefault();
+      const href = asset.getAttribute('href');
+      fetch(href, { method: 'HEAD' })
+        .then(r => {
+          if (!r.ok) throw new Error('missing');
+          const a = document.createElement('a');
+          a.href = href; a.download = ''; document.body.appendChild(a); a.click(); a.remove();
+          toast('Downloading CV…');
+        })
+        .catch(() => toast('CV will be available soon'));
+    }
+  });
+
+  /* copy email + contact form (mailto — nothing leaves the browser) */
+  const EMAIL = 'vipul26122004@gmail.com';
+  $('#copy-email').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(EMAIL); }
+    catch (err) {
+      const ta = document.createElement('textarea'); ta.value = EMAIL; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e2) { /* ignore */ }
+      ta.remove();
+    }
+    toast('Email copied: ' + EMAIL);
+  });
+  $('#contact-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = $('#cf-name').value.trim(), msg = $('#cf-msg').value.trim();
+    if (!name || !msg) return;
+    const subject = encodeURIComponent(`Portfolio enquiry from ${name}`);
+    const bodyTxt = encodeURIComponent(`${msg}\n\n— ${name}`);
+    location.href = `mailto:${EMAIL}?subject=${subject}&body=${bodyTxt}`;
+    toast('Opening your email app…');
+  });
+
+  /* ═══════════════════════════════════════════
+     WEB-SHOOTER — click anywhere to fire a web
+  ═══════════════════════════════════════════ */
+  (function webShooter() {
+    const cv = $('#webfx'), ctx = cv.getContext('2d');
+    const shots = [];
+    let dpr = 1, raf = 0;
+    function size() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    size(); window.addEventListener('resize', size);
+
+    const IGNORE = 'a,button,input,textarea,select,label,form,#hud,#nav,nav,#term,#gate,#sphere,#demo-canvas,#toast';
+    document.addEventListener('click', e => {
+      if (!WEB.entered || WEB.paused || e.target.closest(IGNORE)) return;
+      const ox = e.clientX < innerWidth / 2 ? -10 : innerWidth + 10, oy = innerHeight + 10;
+      shots.push({ ox, oy, x: e.clientX, y: e.clientY, t: 0, start: performance.now(), sag: rand(20, 50) * (Math.random() < 0.5 ? -1 : 1), a0: rand(0, 6.28) });
+      if (!raf) raf = requestAnimationFrame(loop);
+    });
+
+    function loop(now) {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      for (let i = shots.length - 1; i >= 0; i--) {
+        const s = shots[i]; s.t = (now - s.start) / 1000;   // wall-clock, so it never lingers on slow frames
+        const fly = clamp(s.t / 0.16, 0, 1);              // web travels to the target
+        const fade = clamp(1 - (s.t - 0.16) / 1.7, 0, 1);
+        if (fade <= 0) { shots.splice(i, 1); continue; }
+        const mx = (s.ox + s.x) / 2 + s.sag, my = (s.oy + s.y) / 2;
+        // point on the quadratic curve at parameter `fly`
+        const q = k => ({ x: (1 - k) * (1 - k) * s.ox + 2 * (1 - k) * k * mx + k * k * s.x, y: (1 - k) * (1 - k) * s.oy + 2 * (1 - k) * k * my + k * k * s.y });
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = '#4c8dff'; ctx.shadowBlur = 10;
+        ctx.strokeStyle = 'rgba(235,240,255,.9)'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(s.ox, s.oy);
+        for (let k = 0.05; k <= fly + 1e-6; k += 0.05) { const p = q(Math.min(k, fly)); ctx.lineTo(p.x, p.y); }
+        ctx.stroke();
+        if (fly >= 1) {
+          // splat: mini web at the impact point
+          const grow = clamp((s.t - 0.16) / 0.18, 0, 1), R = 54 * grow, N = 8;
+          ctx.lineWidth = 1.2; ctx.shadowColor = '#e62429';
+          ctx.beginPath();
+          for (let k = 0; k < N; k++) { const a = s.a0 + (k / N) * 6.283; ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + Math.cos(a) * R, s.y + Math.sin(a) * R); }
+          ctx.stroke();
+          for (const f of [0.35, 0.65, 1]) {
+            ctx.beginPath();
+            for (let k = 0; k <= N; k++) {
+              const a = s.a0 + (k / N) * 6.283, am = s.a0 + ((k - 0.5) / N) * 6.283, r = R * f;
+              if (k === 0) ctx.moveTo(s.x + Math.cos(a) * r, s.y + Math.sin(a) * r);
+              else { ctx.quadraticCurveTo(s.x + Math.cos(am) * r * 0.86, s.y + Math.sin(am) * r * 0.86, s.x + Math.cos(a) * r, s.y + Math.sin(a) * r); }
+            }
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+      if (shots.length) raf = requestAnimationFrame(loop);
+      else { raf = 0; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+    }
+  })();
+
+  /* ═══════════════════════════════════════════
+     TERMINAL — press ~ (or the >_ button)
+  ═══════════════════════════════════════════ */
+  const termEl = $('#term'), termOut = $('#term-out'), termIn = $('#term-in');
+  const hist = []; let hi = -1, termBooted = false;
+  function print(text, cls) {
+    const d = document.createElement('div');
+    if (cls) d.className = cls;
+    d.textContent = text;
+    termOut.appendChild(d);
+    termOut.scrollTop = termOut.scrollHeight;
+  }
+  function openTerm() {
+    termEl.hidden = false;
+    if (!termBooted) { termBooted = true; print('Welcome. Type "help" to see what I can do.', 'hl'); }
+    setTimeout(() => termIn.focus(), 30);
+  }
+  function closeTerm() { termEl.hidden = true; termIn.blur(); }
+  function toggleTerm() { termEl.hidden ? openTerm() : closeTerm(); }
+  $('#term-close').addEventListener('click', closeTerm);
+  termEl.addEventListener('click', e => { if (e.target === termEl) closeTerm(); });
+
+  const SECTION_IDS = { about: 'about', education: 'education', experience: 'experience', projects: 'projects', skills: 'skills', certs: 'certifications', certifications: 'certifications', publication: 'publication', achievements: 'achievements', contact: 'contact', top: 'hero' };
+  const PROJECTS = ['QUANTX AI', 'VIPVISUALIZE', 'NORTH STARS', 'RESUME-AI', 'FRET CONNECT', 'VEDAGYA', 'ALZHEIMER PREDICTION SYSTEM', 'TRAFFIC SIMULATION SYSTEM', 'PG LIFE', 'KBC GAME & HANGMAN'];
+  const jump = id => { closeTerm(); const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth' }); };
+
+  const CMDS = {
+    help: () => ['Commands:', '  whoami        who is this guy', '  skills        tech stack', '  education     academic record', '  experience    work history', '  projects      list projects (then: open <n>)', '  contact       how to reach me', '  cv            download my resume', '  hire          the important one', '  goto <where>  about | projects | skills | contact …', '  venom         you asked for it', '  calm          reduce effects', '  clear         clear the screen', '  exit          close (or press Esc)'],
+    whoami: () => ['Vipul Sharma — Aspiring Data/AI Engineer', 'M.Tech CSE @ IIIT Una (2025–2027) · CGPA 8.65', 'GATE CS 2025 qualified (Top 5.5%) · published researcher', 'Databases, backend APIs, applied ML / GenAI. From Himachal Pradesh, India.'],
+    skills: () => ['Languages & DBs  Python, SQL, C++, JavaScript · MySQL, PostgreSQL, MongoDB', 'Data & Backend   REST API design, data modeling, graph modeling, Node.js, Express.js', 'ML & AI          NumPy, Pandas, Scikit-learn, GenAI fundamentals, prompt engineering', 'Tools            Docker, Git, Linux, VS Code · DBMS, DSA, OS, Networks, Compilers'],
+    education: () => ['M.Tech CSE   IIIT Una ............ 2025–2027 · 8.65 CGPA (current)', 'B.Tech CSE   HPTU ................. 2021–2025 · 8.16 CGPA', 'XII          CBSE .................. 2021 · 94.8%', 'X            HP Board .............. 2019 · 92.4%'],
+    experience: () => ['Teaching Assistant, IIIT Una (2026–present)', '  · lab practicals & grading: Network Security, OOP (C++)', 'Trainee, Excellence Technology (Jan–May 2025)', 'Freelance & Technical Contributions (2023–present)', '  · technical reports; debugging/review of C/C++, Python, web & DB projects'],
+    projects: () => [...PROJECTS.map((p, i) => `  ${i + 1}. ${p}`), 'Type "open <n>" to jump to the Projects section.'],
+    contact: () => [`Email     ${EMAIL}`, 'Phone     +91-8628997357', 'LinkedIn  linkedin.com/in/vipul-s-302734228', 'GitHub    github.com/VIPULCODEX'],
+    cv: () => { $('#btn-cv').click(); return ['Requesting resume…']; },
+    hire: () => { setTimeout(() => { jump('contact'); }, 500); return ['Excellent decision.', 'Taking you to the contact section…']; },
+    venom: () => { setFx(2); return ['We are Venom.', '(intensity set to VENOM)']; },
+    calm: () => { setFx(0); return ['Effects reduced.']; },
+    spiderman: () => ['With great power comes great responsibility.'],
+    sudo: () => ['Nice try, web-slinger.'],
+    ls: () => Object.keys(SECTION_IDS).filter(k => k !== 'certifications').map(k => k + '/'),
+    pwd: () => ['/portfolio/vipul-sharma'],
+    exit: () => { closeTerm(); return []; },
+  };
+
+  function runCmd(raw) {
+    const line = raw.trim();
+    if (!line) return;
+    print(line, 'cmd');
+    hist.unshift(line); hi = -1;
+    const [cmd, ...args] = line.toLowerCase().split(/\s+/);
+    if (cmd === 'clear') { termOut.textContent = ''; return; }
+    if (cmd === 'goto' || cmd === 'cd') {
+      const id = SECTION_IDS[(args[0] || '').replace('/', '')];
+      if (!id) return print(`unknown place: ${args[0] || ''}. Try: ${Object.keys(SECTION_IDS).join(', ')}`, 'err');
+      print(`Going to ${args[0]}…`, 'hl'); setTimeout(() => jump(id), 350); return;
+    }
+    if (cmd === 'open') {
+      const n = parseInt(args[0], 10);
+      if (!n || n < 1 || n > PROJECTS.length) return print(`usage: open <1-${PROJECTS.length}>`, 'err');
+      print(`Opening ${PROJECTS[n - 1]}…`, 'hl'); setTimeout(() => jump('projects'), 350); return;
+    }
+    const fn = CMDS[cmd];
+    if (!fn) return print(`command not found: ${cmd}. Type "help".`, 'err');
+    fn().forEach(l => print(l));
+  }
+  $('#term-form').addEventListener('submit', e => { e.preventDefault(); const v = termIn.value; termIn.value = ''; runCmd(v); });
+  termIn.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp') { e.preventDefault(); if (hi < hist.length - 1) termIn.value = hist[++hi]; }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); hi = Math.max(-1, hi - 1); termIn.value = hi === -1 ? '' : hist[hi]; }
+    else if (e.key === '`' || e.key === '~') { e.preventDefault(); closeTerm(); }
+  });
+
+  /* ═══════════════════════════════════════════
+     CONCEPT DEMO — kidney-exchange cycles
+     (an illustration of the idea behind VipVisualize, not the tool itself)
+  ═══════════════════════════════════════════ */
+  (function exchangeDemo() {
+    const cv = $('#demo-canvas');
+    if (!cv) return;
+    const ctx = cv.getContext('2d'), status = $('#demo-status');
+    const N = 7;
+    let adj = [], W = 0, H = 0, dpr = 1, litEdges = [], litNodes = new Set(), timer = 0;
+
+    const cyclesFrom = () => {
+      const found = [];
+      const dfs = (start, path) => {
+        const u = path[path.length - 1];
+        for (let v = 0; v < N; v++) {
+          if (!adj[u][v]) continue;
+          if (v === start && path.length >= 2) found.push([...path]);
+          else if (v > start && !path.includes(v) && path.length < 4) dfs(start, [...path, v]);
+        }
+      };
+      for (let s = 0; s < N; s++) dfs(s, [s]);
+      return found;
+    };
+    function shuffle() {
+      clearInterval(timer); litEdges = []; litNodes = new Set();
+      let tries = 0;
+      do {
+        adj = Array.from({ length: N }, (_, i) => Array.from({ length: N }, (_, j) => i !== j && Math.random() < 0.3));
+        tries++;
+      } while (tries < 30 && (cyclesFrom().length === 0) === (Math.random() < 0.85));
+      status.textContent = 'Press “Find an exchange” to search for a cycle.';
+      draw();
+    }
+    const R = () => ({ rx: W * 0.34, ry: H * 0.36 });
+    const pos = i => { const a = -Math.PI / 2 + (i / N) * Math.PI * 2, { rx, ry } = R(); return { x: W / 2 + Math.cos(a) * rx, y: H / 2 + Math.sin(a) * ry }; };
+
+    function arrow(a, b, lit, bend) {
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, nx = -dy / d, ny = dx / d, nr = 20;
+      const cx = (a.x + b.x) / 2 + nx * bend, cy = (a.y + b.y) / 2 + ny * bend;
+      const t0 = { x: cx - a.x, y: cy - a.y }, t1 = { x: b.x - cx, y: b.y - cy };
+      const l0 = Math.hypot(t0.x, t0.y), l1 = Math.hypot(t1.x, t1.y);
+      const sx = a.x + (t0.x / l0) * nr, sy = a.y + (t0.y / l0) * nr;
+      const ex = b.x - (t1.x / l1) * nr, ey = b.y - (t1.y / l1) * nr;
+      ctx.strokeStyle = lit ? '#ff3b3f' : 'rgba(150,165,200,.42)';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = lit ? 3 : 1.4;
+      ctx.shadowColor = '#e62429'; ctx.shadowBlur = lit ? 14 : 0;
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
+      const ang = Math.atan2(ey - cy, ex - cx), h = lit ? 11 : 8;
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - Math.cos(ang - 0.4) * h, ey - Math.sin(ang - 0.4) * h);
+      ctx.lineTo(ex - Math.cos(ang + 0.4) * h, ey - Math.sin(ang + 0.4) * h);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    function draw() {
+      if (!W) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      const isLit = (i, j) => litEdges.some(e => e[0] === i && e[1] === j);
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        if (!adj[i][j] || isLit(i, j)) continue;
+        arrow(pos(i), pos(j), false, adj[j][i] ? 22 : 8);
+      }
+      litEdges.forEach(([i, j]) => arrow(pos(i), pos(j), true, adj[j][i] ? 22 : 8));
+      for (let i = 0; i < N; i++) {
+        const p = pos(i), on = litNodes.has(i);
+        ctx.beginPath(); ctx.arc(p.x, p.y, 20, 0, 6.283);
+        ctx.fillStyle = on ? '#e62429' : '#0a0e1c';
+        ctx.strokeStyle = on ? '#fff' : 'rgba(76,141,255,.75)'; ctx.lineWidth = 2;
+        ctx.shadowColor = on ? '#e62429' : '#4c8dff'; ctx.shadowBlur = on ? 18 : 8;
+        ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+        ctx.fillStyle = '#fff'; ctx.font = '700 13px "Share Tech Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('P' + (i + 1), p.x, p.y + 1);
+      }
+    }
+    function find() {
+      clearInterval(timer); litEdges = []; litNodes = new Set();
+      const all = cyclesFrom();
+      if (!all.length) { status.textContent = 'No exchange cycle in this pool — try a new pool.'; draw(); return; }
+      const cyc = all[Math.floor(Math.random() * all.length)];
+      const edges = cyc.map((u, k) => [u, cyc[(k + 1) % cyc.length]]);
+      let k = 0;
+      status.textContent = 'Searching…';
+      timer = setInterval(() => {
+        litEdges.push(edges[k]); litNodes.add(edges[k][0]); litNodes.add(edges[k][1]); k++;
+        draw();
+        if (k >= edges.length) {
+          clearInterval(timer);
+          status.textContent = `Exchange found: ${cyc.map(i => 'P' + (i + 1)).join(' → ')} → P${cyc[0] + 1}. ${cyc.length} pairs each receive a compatible kidney.`;
+        }
+      }, 480);
+    }
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = cv.clientWidth; H = cv.clientHeight;
+      cv.width = W * dpr; cv.height = H * dpr;
+      draw();
+    }
+    $('#demo-shuffle').addEventListener('click', shuffle);
+    $('#demo-find').addEventListener('click', find);
+    if ('ResizeObserver' in window) new ResizeObserver(resize).observe(cv); else window.addEventListener('resize', resize);
+    shuffle(); resize();
   })();
 })();

@@ -29,7 +29,7 @@ function boot() {
   /* ─────────── renderer / camera ─────────── */
   const host = document.getElementById('gl');
   const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
-  const DPR = Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2);
+  let DPR = Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2);
   renderer.setPixelRatio(DPR);
   renderer.setSize(innerWidth, innerHeight);
   renderer.setClearColor(0x030006);
@@ -453,14 +453,16 @@ function boot() {
 
   /* ─────────── main loop ─────────── */
   const clock = new THREE.Clock();
+  let perfN = 0, perfSum = 0, perfDone = false;
   let time = 0, ps = 0, introK = 0, ms = { x: 0, y: 0 }, blinkT = 3, blink = 0;
   const _c0 = new THREE.Vector3(), _c1 = new THREE.Vector3(), _e = new THREE.Vector3();
 
   function frame() {
     requestAnimationFrame(frame);
-    if (document.hidden) { clock.getDelta(); return; }
+    if (document.hidden || WEB.quick) { clock.getDelta(); return; }   // quick view: render nothing
 
-    let dt = Math.min(clock.getDelta(), 0.05);
+    const rawDt = clock.getDelta();
+    let dt = Math.min(rawDt, 0.05);
     if (WEB.paused) dt = 0;
     time += dt;
     const fxm = clamp(WEB.fxMul(), 0.15, 2);
@@ -473,6 +475,21 @@ function boot() {
     ms.y += (WEB.mouse.y - ms.y) * (1 - Math.exp(-dt * 4));
 
     if (WEB.entered) introK = Math.min(1, introK + dt / 3.4);
+
+    // adaptive quality: if the first ~1.5s after the intro run slow, drop resolution and bloom
+    if (!perfDone && introK >= 1 && !WEB.paused) {
+      perfSum += rawDt;
+      if (++perfN >= 90) {
+        perfDone = true;
+        if (perfSum / perfN > 0.045) {
+          DPR = 1;
+          renderer.setPixelRatio(1); composer.setPixelRatio(1);
+          bloom.enabled = false;
+          resize();
+          if (WEB.toast) WEB.toast('Performance mode enabled — try Quick view for the fastest experience');
+        }
+      }
+    }
     const intro = 1 - Math.pow(1 - introK, 3);
 
     /* camera rides the tunnel centre-line */
