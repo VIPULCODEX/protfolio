@@ -45,12 +45,12 @@
 <!-- ═════════ FIXED LAYERS ═════════ -->
 <div id="gl" aria-hidden="true"></div>
 <div id="vignette" aria-hidden="true"></div>
-<div id="whisper" aria-hidden="true"></div>
 <div id="flash" aria-hidden="true"></div>
-<div id="exit-warning" aria-hidden="true">LEAVING SO SOON?<small>The web will be here when you get back.</small></div>
 <div id="cur" aria-hidden="true"></div>
 <div id="cur-ring" aria-hidden="true"></div>
 <div id="ghost" aria-hidden="true"></div>
+<div id="bars" aria-hidden="true"><i></i><i></i></div>
+<div id="titlecard" aria-hidden="true"><small id="tc-kicker"></small><h2 id="tc-title"></h2><span class="tc-line"></span><em id="tc-sub"></em></div>
 <canvas id="webfx" aria-hidden="true"></canvas>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="term" hidden role="dialog" aria-label="Terminal">
@@ -123,6 +123,7 @@
     <li><a href="#contact">Contact</a></li>
   </ul>
   <div class="nav-right">
+    <button id="nav-term" class="nav-btn term" type="button" data-open-term title="Open the terminal (press ~)"><i class="fas fa-terminal"></i><span>Terminal</span></button>
     <button id="mode-toggle" class="nav-btn" type="button" title="Switch between the 3D experience and a plain fast view">Quick view</button>
     <a id="nav-cv" class="nav-btn primary" href="assets/Vipul_Sharma_CV.pdf" data-asset download><i class="fas fa-download"></i> Resume</a>
   </div>
@@ -132,7 +133,7 @@
 <main id="content">
 
   <!-- 01 HERO -->
-  <section id="hero" data-name="ORIGIN">
+  <section id="hero" data-name="INTRODUCTION">
     <div class="container hero-grid">
       <div class="hero-copy">
         <p class="hero-tag reveal" style="--d:.1s">// M.TECH CSE · IIIT UNA · INDIA</p>
@@ -146,6 +147,7 @@
           <a href="https://github.com/VIPULCODEX" target="_blank" rel="noopener" class="btn btn-ghost" id="btn-github"><i class="fab fa-github"></i> GitHub</a>
           <a href="https://linkedin.com/in/vipul-s-302734228" target="_blank" rel="noopener" class="btn btn-ghost" id="btn-linkedin"><i class="fab fa-linkedin"></i> LinkedIn</a>
           <a href="mailto:vipul26122004@gmail.com" class="btn btn-ghost" id="btn-email"><i class="fas fa-envelope"></i> Email</a>
+          <button type="button" class="btn btn-term" id="btn-term" data-open-term title="Open the terminal (press ~)"><i class="fas fa-terminal"></i> Terminal <kbd>~</kbd></button>
         </div>
         <pre id="hero-log" class="hero-log reveal" style="--d:.9s" aria-hidden="true"></pre>
       </div>
@@ -174,7 +176,7 @@
   </section>
 
   <!-- 02 ABOUT / STATS -->
-  <section id="about" data-name="POWERS">
+  <section id="about" data-name="BY THE NUMBERS">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-spider"></i><span class="scr">Network Stats</span></h2>
       <div class="stats">
@@ -187,7 +189,7 @@
   </section>
 
   <!-- 03 EDUCATION -->
-  <section id="education" data-name="TRAINING">
+  <section id="education" data-name="EDUCATION">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-graduation-cap"></i><span class="scr">Education</span></h2>
       <div class="panel edu-wrap reveal">
@@ -205,7 +207,7 @@
   </section>
 
   <!-- 04 EXPERIENCE -->
-  <section id="experience" data-name="DAY JOB">
+  <section id="experience" data-name="EXPERIENCE">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-briefcase"></i><span class="scr">Experience</span></h2>
       <div class="exp-list">
@@ -226,7 +228,7 @@
   </section>
 
   <!-- 05 PROJECTS -->
-  <section id="projects" data-name="MISSIONS">
+  <section id="projects" data-name="PROJECTS">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-code"></i><span class="scr">Projects</span></h2>
       <h3 class="sub-title reveal"><i class="fas fa-star"></i> Featured</h3>
@@ -264,7 +266,7 @@
   </section>
 
   <!-- 06 SKILLS -->
-  <section id="skills" data-name="ARSENAL">
+  <section id="skills" data-name="SKILLS">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-terminal"></i><span class="scr">Technical Skills</span></h2>
       <p class="hint reveal">// drag the orb to explore</p>
@@ -314,7 +316,7 @@
   </section>
 
   <!-- 09 ACHIEVEMENTS -->
-  <section id="achievements" data-name="BADGES">
+  <section id="achievements" data-name="ACHIEVEMENTS">
     <div class="container">
       <h2 class="section-title reveal"><i class="fas fa-trophy"></i><span class="scr">Achievements</span></h2>
       <div class="achieve-grid">
@@ -333,7 +335,7 @@
       <h2 class="finale-title glitch reveal" data-text="LET'S WEAVE SOMETHING TOGETHER">LET'S WEAVE SOMETHING TOGETHER</h2>
       <p class="finale-sub reveal">You made it to the bottom of the web. If you like what you've seen, I'd love to hear about the role or project you have in mind. <b>Let's talk.</b></p>
       <div class="finale-actions reveal">
-        <a href="mailto:vipul26122004@gmail.com" class="btn btn-red btn-lg" id="btn-hire"><i class="fas fa-envelope"></i> Hire Me</a>
+        <a href="mailto:vipul26122004@gmail.com" class="btn btn-red btn-lg" id="btn-hire"><i class="fas fa-envelope"></i> Get in touch</a>
         <a href="https://linkedin.com/in/vipul-s-302734228" target="_blank" rel="noopener" class="btn btn-ghost btn-lg"><i class="fab fa-linkedin"></i> LinkedIn</a>
         <a href="https://github.com/VIPULCODEX" target="_blank" rel="noopener" class="btn btn-ghost btn-lg"><i class="fab fa-github"></i> GitHub</a>
         <a href="tel:+918628997357" class="btn btn-ghost btn-lg"><i class="fas fa-phone"></i> +91-8628997357</a>
@@ -350,8 +352,17 @@
         <p class="form-note">This opens your email client with the message ready to send. Nothing is stored.</p>
       </form>
       <button id="wake" class="wake-btn reveal" type="button"><i class="fas fa-arrow-up"></i> back to the top</button>
+      <div class="credits reveal" aria-label="Credits">
+        <div class="credits-title">— CREDITS —</div>
+        <dl>
+          <div><dt>Written &amp; directed by</dt><dd>Vipul Sharma</dd></div>
+          <div><dt>Cinematography</dt><dd>three.js · WebGL</dd></div>
+          <div><dt>Starring</dt><dd>Python · SQL · MongoDB · Docker · ML</dd></div>
+          <div><dt>Shot on location</dt><dd>Himachal Pradesh, India</dd></div>
+        </dl>
+      </div>
       <p class="finale-foot reveal">Designed &amp; built by <span>Vipul Sharma</span> · Himachal Pradesh, India<br/>
-        <small>Tip: try typing <code>hire</code> on your keyboard.</small></p>
+        <small>Tip: press <kbd>~</kbd> to open the terminal.</small></p>
     </div>
   </section>
 </main>
@@ -366,7 +377,7 @@
   <div class="hud-row">
     <button id="hud-play" class="hud-btn" type="button" title="Pause effects (Space)" aria-label="Pause effects"><i class="fas fa-pause"></i></button>
     <div class="hud-info">
-      <span id="hud-ch">CH.01 · ORIGIN</span>
+      <span id="hud-ch">CH.01 · INTRODUCTION</span>
       <span id="hud-pos">SYMBIOTE BOND 0% · SPIDER-SENSE</span>
     </div>
     <label class="hud-bright" title="Brightness (+ / −)"><i class="fas fa-sun"></i>

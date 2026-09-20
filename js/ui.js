@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════════════════
    ui.js — everything that is NOT WebGL:
-   gate, audio engine, HUD/player, heartbeat, whispers, cursor,
+   gate, HUD/player, heartbeat, cursor,
    reveal animations, skill orb.  Shares state with scene.js via window.WEB
 ════════════════════════════════════════════════════════════════ */
 (() => {
@@ -61,6 +61,24 @@
   setFx(WEB.fx);
 
   /* ═══════════════════════════════════════════
+     CINEMATIC TITLE CARDS + LETTERBOX
+  ═══════════════════════════════════════════ */
+  const barsEl = $('#bars'), tcEl = $('#titlecard'), tcK = $('#tc-kicker'), tcT = $('#tc-title'), tcS = $('#tc-sub');
+  let tcTimer = 0, tcLast = 0;
+  function titleCard(kicker, title, sub, ms, opts = {}) {
+    if (WEB.quick || !WEB.entered) return;
+    const now = performance.now();
+    if (!opts.force && now - tcLast < 2600) return;         // never spam
+    tcLast = now;
+    tcK.textContent = kicker; tcT.textContent = title; tcS.textContent = sub || '';
+    if (opts.bars !== false && WEB.fx > 0) barsEl.classList.add('on');
+    tcEl.classList.add('on');
+    clearTimeout(tcTimer);
+    tcTimer = setTimeout(() => { tcEl.classList.remove('on'); barsEl.classList.remove('on'); }, ms);
+  }
+  WEB.titleCard = titleCard;
+
+  /* ═══════════════════════════════════════════
      GATE → ENTER
   ═══════════════════════════════════════════ */
   const gate = $('#gate');
@@ -75,11 +93,16 @@
     window.scrollTo(0, 0);
     setQuick(quick);
     measure();
-    if (!quick) { WEB.kick(0.9); flash('white', 120); startReveals(); }
+    if (!quick) {
+      WEB.kick(0.35); flash('white', 120);
+      barsEl.classList.add('full');                          // start fully black, then open like a film
+      requestAnimationFrame(() => requestAnimationFrame(() => { barsEl.classList.remove('full'); if (WEB.fx > 0) barsEl.classList.add('on'); }));
+      titleCard('PORTFOLIO', 'VIPUL SHARMA', 'Data · AI · Backend', 3300, { force: true });
+      setTimeout(startReveals, 2500);                        // hero content arrives after the title
+    }
     typeLog();
     startRoles();
     beatAt = clock + 800;
-    nextWhisper = clock + 12000;
   }
   $('#enter').addEventListener('click', () => enterSite(false));
   $('#quick').addEventListener('click', () => enterSite(true));
@@ -93,7 +116,6 @@
     if (on) {
       $$('.reveal').forEach(el => el.classList.add('in'));
       $$('[data-count]').forEach(el => { el.textContent = (el.dataset.prefix || '') + (+el.dataset.count).toFixed(+(el.dataset.dec || 0)) + (el.dataset.suffix || ''); });
-      whisperEl.classList.remove('on');
     } else if (WEB.entered) {
       WEB.kick(0.6);
     }
@@ -128,6 +150,7 @@
   }
   hudFs.addEventListener('click', () => toggleFullscreen());
   $('#hud-term').addEventListener('click', () => toggleTerm());
+  $$('[data-open-term]').forEach(b => b.addEventListener('click', () => toggleTerm()));
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev =>
     document.addEventListener(ev, () => {
       const on = document.fullscreenElement || document.webkitFullscreenElement;
@@ -145,16 +168,8 @@
     else if (k === 'f') toggleFullscreen();
     else if (k === '+' || k === '=') setBright(WEB.bright * 100 + 5);
     else if (k === '-' || k === '_') setBright(WEB.bright * 100 - 5);
-    // easter egg: type "hire"
-    typed = (typed + k).slice(-4);
-    if (typed === 'hire') {
-      typed = '';
-      WEB.kick(1.5); flash('red', 220);
-      showWhisper('GOOD CHOICE', true);
-      setTimeout(() => $('#contact').scrollIntoView({ behavior: 'smooth' }), 400);
-    }
   });
-  let typed = '';
+
 
   /* ─── seek bar ─── */
   const seek = $('#hud-seek'), seekFill = $('.seek-fill'), seekKnob = $('.seek-knob'), seekTicks = $('.seek-ticks');
@@ -226,8 +241,8 @@
       hudCh.textContent = `CH.${String(cur + 1).padStart(2, '0')} · ${s.dataset.name}`;
       navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + s.id));
       if (!first && WEB.entered) {
-        WEB.kick(0.9);
-        if (WEB.fx > 0 && Math.random() < 0.8) showWhisper();
+        WEB.kick(0.35);
+        titleCard('CHAPTER ' + String(cur + 1).padStart(2, '0'), s.dataset.name, '', 1700);
       }
     }
     const fin = WEB.p > 0.985;
@@ -235,7 +250,6 @@
     if (fin && !finaleSeen && WEB.entered) {
       finaleSeen = true;
       WEB.kick(2); flash('red', 200);
-      showWhisper('WE ARE VENOM', true);
     }
     updateHud();
   }
@@ -248,33 +262,12 @@
   $('#wake').addEventListener('click', () => {
     finaleSeen = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => showWhisper('SEE YOU SOON', true), 1200);
   });
 
   /* ═══════════════════════════════════════════
      WHISPERS · FLASHES · HEARTBEAT
   ═══════════════════════════════════════════ */
-  const whisperEl = $('#whisper'), flashEl = $('#flash');
-  const WHISPERS = [
-    'SPIDER-SENSE TINGLING', 'WE ARE VENOM', 'STAY IN THE WEB', 'HIRE HIM', 'KEEP SCROLLING',
-    'GO DEEPER', 'STILL HERE?', 'THE WEB HOLDS', 'ALMOST THERE',
-  ];
-  let whisperTimer = 0;
-  function showWhisper(text, force) {
-    if (!force && (WEB.fx === 0 || WEB.paused || !WEB.entered)) return;
-    if (WEB.fx === 0 && !force) return;
-    clearTimeout(whisperTimer);
-    const rot = rand(-4, 4);
-    whisperEl.textContent = text || pick(WHISPERS);
-    whisperEl.style.setProperty('--rot', rot + 'deg');
-    whisperEl.style.fontSize = rand(1.2, 2.4).toFixed(2) + 'rem';
-    whisperEl.style.left = (Math.random() < 0.5 ? rand(10, 18) : rand(82, 90)).toFixed(1) + '%';
-    whisperEl.style.top = rand(20, 75).toFixed(1) + '%';
-    whisperEl.style.transform = `translate(-50%,-50%) rotate(${rot}deg)`;
-    whisperEl.classList.add('on');
-    WEB.kick(0.15);
-    whisperTimer = setTimeout(() => whisperEl.classList.remove('on'), force ? 1200 : rand(500, 900));
-  }
+  const flashEl = $('#flash');
 
   function flash(kind, ms) {
     if (WEB.fx < 2 && kind !== 'white') return;
@@ -285,7 +278,7 @@
   }
 
   const vignette = $('#vignette');
-  let clock = 0, beatAt = Infinity, dubAt = Infinity, nextWhisper = Infinity, nextBlink = Infinity, last = performance.now();
+  let clock = 0, beatAt = Infinity, dubAt = Infinity, nextBlink = Infinity, last = performance.now();
 
   function beat(v) {
     WEB.heart = Math.max(WEB.heart, v);
@@ -308,30 +301,8 @@
     ring.classList.toggle('hot', !!t);
   });
 
-  // exit-intent + tab-blur
-  const exitEl = $('#exit-warning');
-  document.addEventListener('mouseout', e => {
-    if (!WEB.entered || WEB.fx === 0 || e.relatedTarget || e.clientY > 8) return;
-    exitEl.classList.add('on');
-    setTimeout(() => exitEl.classList.remove('on'), 1300);
-  });
-  const baseTitle = document.title;
-  let titleIv = 0;
-  document.addEventListener('visibilitychange', () => {
-    clearInterval(titleIv);
-    if (document.hidden && WEB.entered) {
-      const t = ['Still swinging? 🕷️', 'The web misses you'];
-      let i = 0;
-      document.title = t[0];
-      titleIv = setInterval(() => (document.title = t[++i % t.length]), 1200);
-    } else {
-      document.title = baseTitle;
-      
-    }
-  });
-
   /* ═══════════════════════════════════════════
-     MAIN TICK  (heartbeat · whispers · cursor · decays)
+     MAIN TICK  (heartbeat · cursor · decays)
   ═══════════════════════════════════════════ */
   function tick(now) {
     requestAnimationFrame(tick);
@@ -362,10 +333,6 @@
       }
       if (clock >= dubAt) { beat(0.6); dubAt = Infinity; }
 
-      if (WEB.fx > 0 && clock >= nextWhisper) {
-        showWhisper();
-        nextWhisper = clock + rand(14000, 26000) / (WEB.fx === 2 ? 2.2 : 1);
-      }
       // random micro-blackouts & inversions
       if (WEB.fx === 2 && clock >= nextBlink) {
         if (Math.random() < 0.5) WEB.invert = 1;
@@ -674,7 +641,7 @@
   const jump = id => { closeTerm(); const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth' }); };
 
   const CMDS = {
-    help: () => ['Commands:', '  whoami        who is this guy', '  skills        tech stack', '  education     academic record', '  experience    work history', '  projects      list projects (then: open <n>)', '  contact       how to reach me', '  cv            download my resume', '  hire          the important one', '  goto <where>  about | projects | skills | contact …', '  venom         you asked for it', '  calm          reduce effects', '  clear         clear the screen', '  exit          close (or press Esc)'],
+    help: () => ['Commands:', '  whoami        who is this guy', '  skills        tech stack', '  education     academic record', '  experience    work history', '  projects      list projects (then: open <n>)', '  contact       how to reach me', '  cv            download my resume', '  goto <where>  about | projects | skills | contact …', '  venom         switch to full-intensity effects', '  calm          reduce effects', '  clear         clear the screen', '  exit          close (or press Esc)'],
     whoami: () => ['Vipul Sharma — Aspiring Data/AI Engineer', 'M.Tech CSE @ IIIT Una (2025–2027) · CGPA 8.65', 'GATE CS 2025 qualified (Top 5.5%) · published researcher', 'Databases, backend APIs, applied ML / GenAI. From Himachal Pradesh, India.'],
     skills: () => ['Languages & DBs  Python, SQL, C++, JavaScript · MySQL, PostgreSQL, MongoDB', 'Data & Backend   REST API design, data modeling, graph modeling, Node.js, Express.js', 'ML & AI          NumPy, Pandas, Scikit-learn, GenAI fundamentals, prompt engineering', 'Tools            Docker, Git, Linux, VS Code · DBMS, DSA, OS, Networks, Compilers'],
     education: () => ['M.Tech CSE   IIIT Una ............ 2025–2027 · 8.65 CGPA (current)', 'B.Tech CSE   HPTU ................. 2021–2025 · 8.16 CGPA', 'XII          CBSE .................. 2021 · 94.8%', 'X            HP Board .............. 2019 · 92.4%'],
@@ -682,8 +649,7 @@
     projects: () => [...PROJECTS.map((p, i) => `  ${i + 1}. ${p}`), 'Type "open <n>" to jump to the Projects section.'],
     contact: () => [`Email     ${EMAIL}`, 'Phone     +91-8628997357', 'LinkedIn  linkedin.com/in/vipul-s-302734228', 'GitHub    github.com/VIPULCODEX'],
     cv: () => { $('#btn-cv').click(); return ['Requesting resume…']; },
-    hire: () => { setTimeout(() => { jump('contact'); }, 500); return ['Excellent decision.', 'Taking you to the contact section…']; },
-    venom: () => { setFx(2); return ['We are Venom.', '(intensity set to VENOM)']; },
+    venom: () => { setFx(2); return ['Intensity set to VENOM.']; },
     calm: () => { setFx(0); return ['Effects reduced.']; },
     spiderman: () => ['With great power comes great responsibility.'],
     sudo: () => ['Nice try, web-slinger.'],

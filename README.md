@@ -14,15 +14,16 @@
 
 **For everyone else (the fun part)**
 - **WebGL tunnel (three.js)** — a procedural web you fly through as you scroll, with chapter gates, wall-crawling spiders (red = Spider-Man, white = Venom), a spider that drops in front of you, and Venom's white eyes that follow your cursor
+- **Cinematic direction** — opening title sequence, letterbox bars, a title card at every chapter ("CHAPTER 05 — PROJECTS"), bokeh, anamorphic light streak, film colour grade, handheld camera drift, and end credits
 - **Symbiote takeover** — black ink creeps in from the frame edges as your "symbiote bond" rises (SPIDER-SENSE → TINGLING → BONDING → SYMBIOTE → VENOM)
 - **Web-shooter** — click anywhere to fire a web
-- **Terminal** — press `~` and try `help`
+- **Terminal** — a Terminal button in the nav and hero (or press `~`); try `help`, `whoami`, `projects`, `goto contact`
 - **Custom player HUD** — seek bar with chapter ticks, brightness, intensity (Calm / Spider-Sense / Venom), fullscreen, pause
-- Draggable 3D skill orb, tilt/glare project cards, text scramble, exit-intent message, `hire` easter egg
+- Draggable 3D skill orb, tilt/glare project cards, text scramble
 - No audio
 
 ### Keyboard
-`~` terminal · `Space` pause effects · `F` fullscreen · `+`/`−` brightness · type `hire`
+`~` terminal · `Space` pause effects · `F` fullscreen · `+`/`−` brightness
 
 ### Accessibility
 Contains motion and brief flashing effects — the entry gate offers a **CALM** mode (also auto-selected for `prefers-reduced-motion`). If WebGL is unavailable the site falls back to a CSS-only version with all content intact.

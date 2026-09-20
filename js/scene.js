@@ -32,7 +32,7 @@ function boot() {
   let DPR = Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2);
   renderer.setPixelRatio(DPR);
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setClearColor(0x030006);
+  renderer.setClearColor(0x05060f);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   host.appendChild(renderer.domElement);
 
@@ -59,7 +59,7 @@ function boot() {
       p.xy += aDir * br;
       vec4 mv = modelViewMatrix * vec4(p, 1.0);
       float d = length(mv.xyz);
-      vFade = exp(-d * 0.03) * smoothstep(0.4, 4.0, d);
+      vFade = exp(-d * 0.024) * smoothstep(0.4, 4.0, d);
       vZ = -p.z; vRnd = aRnd;
       gl_Position = projectionMatrix * mv;
     }`;
@@ -69,15 +69,15 @@ function boot() {
     varying float vZ, vRnd, vFade;
     void main() {
       float pulse = pow(0.5 + 0.5 * sin(vZ * 0.28 - uTime * 3.2 + vRnd * 2.0), 10.0);
-      vec3 base = vec3(0.6, 0.66, 0.8);                         // silvery web silk
+      vec3 base = vec3(0.72, 0.78, 0.95);                         // silvery web silk
       vec3 energy = mix(uA, uB, clamp(vRnd, 0.0, 1.0));         // red / blue pulses running along it
       vec3 col = mix(base, energy, clamp(pulse * 1.2, 0.0, 1.0));
-      float a = vFade * (0.5 + pulse * 1.5 + uHeart * 0.3);
+      float a = vFade * (0.95 + pulse * 2.2 + uHeart * 0.4);
       gl_FragColor = vec4(col * a, 1.0);
     }`;
   const ptVS = /* glsl */`
     attribute float aSize; attribute float aRnd;
-    uniform float uTime, uScale, uDrift;
+    uniform float uTime, uScale, uDrift, uMax;
     varying float vFade, vRnd;
     void main() {
       vec3 p = position;
@@ -86,19 +86,19 @@ function boot() {
       vec4 mv = modelViewMatrix * vec4(p, 1.0);
       float d = length(mv.xyz);
       float tw = 0.75 + 0.5 * sin(uTime * 2.0 + aRnd * 40.0);
-      gl_PointSize = clamp(aSize * tw * uScale / d, 0.0, 64.0);
+      gl_PointSize = clamp(aSize * tw * uScale / d, 0.0, uMax);
       vFade = exp(-d * 0.03) * smoothstep(0.3, 3.0, d);
       vRnd = aRnd;
       gl_Position = projectionMatrix * mv;
     }`;
   const ptFS = /* glsl */`
-    uniform vec3 uColor; uniform float uHeart;
+    uniform vec3 uColor; uniform float uHeart, uAlpha;
     varying float vFade, vRnd;
     void main() {
       float r = length(gl_PointCoord - 0.5);
       float a = smoothstep(0.5, 0.0, r);
       a *= a;
-      gl_FragColor = vec4(uColor * a * vFade * (1.4 + uHeart), 1.0);
+      gl_FragColor = vec4(uColor * a * vFade * (1.4 + uHeart) * uAlpha, 1.0);
     }`;
 
   const uni = {
@@ -151,7 +151,7 @@ function boot() {
 
   // glowing junction nodes
   const ptUni = (color, drift) => ({
-    uTime: uni.uTime, uHeart: uni.uHeart, uScale: { value: 800 }, uDrift: { value: drift }, uColor: { value: new THREE.Color(color) },
+    uTime: uni.uTime, uHeart: uni.uHeart, uScale: { value: 800 }, uDrift: { value: drift }, uColor: { value: new THREE.Color(color) }, uMax: { value: 64 }, uAlpha: { value: 1 },
   });
   const nodeUni = ptUni(0xffffff, 0);
   const nodeGeo = new THREE.BufferGeometry();
@@ -182,6 +182,46 @@ function boot() {
   }));
   dust.frustumCulled = false;
   scene.add(dust);
+
+  // cinematic bokeh: big, soft, out-of-focus discs drifting through the frame
+  function makeBokeh(color, n) {
+    const bp = [], bs = [], br = [];
+    for (let i = 0; i < n; i++) {
+      const t = Math.random() * L, a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * rad(t) * 0.8;
+      bp.push(cx(t) + Math.cos(a) * r, cy(t) + Math.sin(a) * r, -t);
+      bs.push(rand(0.9, 2.8)); br.push(Math.random());
+    }
+    const u = ptUni(color, 2.5);
+    u.uMax.value = 220; u.uAlpha.value = 0.13;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(bp, 3));
+    g.setAttribute('aSize', new THREE.Float32BufferAttribute(bs, 1));
+    g.setAttribute('aRnd', new THREE.Float32BufferAttribute(br, 1));
+    const pts = new THREE.Points(g, new THREE.ShaderMaterial({ uniforms: u, vertexShader: ptVS, fragmentShader: ptFS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    pts.frustumCulled = false;
+    scene.add(pts);
+    return u;
+  }
+  const bokehA = makeBokeh(0xe62429, lowPower ? 40 : 80), bokehB = makeBokeh(0x4c8dff, lowPower ? 40 : 80);
+
+  // a glowing light at the far end of the tunnel + a horizontal anamorphic streak through it
+  const glowMat = new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(0xe62429) }, uI: { value: 0.6 }, uStreak: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `varying vec2 vUv; uniform vec3 uColor; uniform float uI, uStreak;
+      void main(){
+        vec2 c = vUv - 0.5;
+        float d = length(c) * 2.0;
+        float halo = pow(max(0.0, 1.0 - d), 2.2);
+        float streak = uStreak * pow(max(0.0, 1.0 - abs(c.x) * 2.0), 3.0) * exp(-abs(c.y) * 90.0);
+        gl_FragColor = vec4(uColor * (halo * uI + streak * uI * 1.6), 1.0);
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const farGlow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), glowMat);
+  const farStreak = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), glowMat.clone());
+  farStreak.material.uniforms = { uColor: glowMat.uniforms.uColor, uI: { value: 0.9 }, uStreak: { value: 1 } };
+  scene.add(farGlow, farStreak);
 
   /* ─────────── chapter gates (mini webs you fly through) ─────────── */
   const gates = new THREE.Group();
@@ -366,7 +406,7 @@ function boot() {
   composer.setPixelRatio(DPR);
   composer.setSize(innerWidth, innerHeight);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.85, 0.5, 0.28);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 1.05, 0.7, 0.2);
   composer.addPass(bloom);
 
   const fxPass = new ShaderPass({
@@ -407,7 +447,12 @@ function boot() {
         col.b = texture2D(tDiffuse, uv - c * ab * 1.2).b;
 
         // scanlines + grain
-        col *= 0.93 + 0.07 * sin(uv.y * uRes.y * 1.6);
+        // film grade: gentle S-curve + a little extra saturation
+        float luma = dot(col, vec3(0.299, 0.587, 0.114));
+        col = mix(vec3(luma), col, 1.22);
+        col = (col - 0.5) * 1.1 + 0.5;
+        col = max(col, 0.0);
+        col *= 0.95 + 0.05 * sin(uv.y * uRes.y * 1.6);
         col += (hash(uv * uRes + uTime) - 0.5) * uNoise;
 
         // Venom: black symbiote creeping in from the edges of the frame
@@ -469,7 +514,7 @@ function boot() {
 
     // smooth progress; `vel` is how hard you're falling
     const diff = WEB.p - ps;
-    ps += diff * (1 - Math.exp(-dt * 2.6));
+    ps += diff * (1 - Math.exp(-dt * 1.9));
     const vel = clamp(diff, -0.2, 0.2);
     ms.x += (WEB.mouse.x - ms.x) * (1 - Math.exp(-dt * 4));
     ms.y += (WEB.mouse.y - ms.y) * (1 - Math.exp(-dt * 4));
@@ -503,6 +548,11 @@ function boot() {
     camera.rotateZ(-vel * 2.2 + Math.sin(time * 0.4) * 0.03 * fxm + (1 - intro) * 0.9);
     camera.translateX(ms.x * 1.2);
     camera.translateY(Math.sin(time * 0.9) * 0.08 + WEB.heart * 0.05 * fxm);
+    // subtle handheld: layered slow sines on rotation + a touch of positional drift
+    const hh = Math.min(fxm, 1.2);
+    camera.rotateX((Math.sin(time * 1.3) + Math.sin(time * 2.9) * 0.5) * 0.0035 * hh);
+    camera.rotateY((Math.sin(time * 1.1 + 1.7) + Math.sin(time * 3.3) * 0.5) * 0.0035 * hh);
+    camera.translateX(Math.sin(time * 0.7) * 0.06 * hh);
     const shake = WEB.glitch * 0.06;
     if (shake > 0.002) camera.position.add(_e.set(rand(-shake, shake), rand(-shake, shake), 0));
     camera.fov = 70 + Math.min(Math.abs(vel) * 260, 26) + WEB.heart * 2.5 * fxm + (1 - intro) * 65;
@@ -517,6 +567,17 @@ function boot() {
     nodeUni.uScale.value = dustUni.uScale.value = scale;
     dustUni.uColor.value.copy(uni.uB.value).lerp(new THREE.Color(0xffffff), 0.6);
     nodeUni.uColor.value.copy(uni.uA.value).multiplyScalar(1.3);
+
+    /* far light + streak follow the tunnel ahead of you */
+    const gt = Math.min(tCam + 150, L + 40);
+    center(gt, farGlow.position); farStreak.position.copy(farGlow.position);
+    farGlow.lookAt(camera.position); farStreak.lookAt(camera.position);
+    const gd = camera.position.distanceTo(farGlow.position);
+    farGlow.scale.set(gd * 0.75, gd * 0.75, 1);
+    farStreak.scale.set(gd * 1.7, gd * 0.5, 1);
+    glowMat.uniforms.uColor.value.copy(uni.uA.value).lerp(uni.uB.value, 0.35);
+    glowMat.uniforms.uI.value = (0.45 + WEB.heart * 0.25) * (1 - ps * 0.35);
+    bokehA.uScale.value = bokehB.uScale.value = scale;
 
     /* gates spin & throb */
     gates.children.forEach(g => {
@@ -549,12 +610,12 @@ function boot() {
     /* post */
     renderer.toneMappingExposure = Math.max(1, WEB.bright);
     fxPass.uniforms.uTime.value = time;
-    fxPass.uniforms.uGlitch.value = WEB.glitch + (WEB.entered ? (1 - intro) * 0.5 : 0);
+    fxPass.uniforms.uGlitch.value = WEB.glitch + (WEB.entered ? (1 - intro) * 0.18 : 0);
     fxPass.uniforms.uAber.value = 0.0012 * fxm + Math.min(Math.abs(vel) * 0.03, 0.006) + WEB.heart * 0.0018 * fxm;
     fxPass.uniforms.uNoise.value = 0.018 + 0.014 * fxm;
     fxPass.uniforms.uInvert.value = WEB.invert;
     fxPass.uniforms.uSym.value = smoothstep01(ps, 0.2, 0.95) * (WEB.fx === 0 ? 0.4 : 1) * 0.7;
-    bloom.strength = 0.75 + WEB.heart * 0.4 * fxm + ps * 0.1;
+    bloom.strength = 0.95 + WEB.heart * 0.35 * fxm + ps * 0.1;
 
     composer.render();
   }
